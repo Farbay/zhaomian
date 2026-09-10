@@ -1,0 +1,4 @@
+include:
+  - project: 'library/devops-java'
+    ref: main
+    file: 'templates/gitlab-ci.notice-library.yml'
