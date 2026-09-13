@@ -80,7 +80,7 @@
 |------|------|------|
 | `pid` | string | 名片 ID |
 | `uid` | string | 用户 ID |
-| `nickname` | string | 昵称 |
+| `nickname` | string | 名字 |
 | `avatarImageId` | string | 头像 Image ID |
 | `identity` | string | 身份描述 |
 | `isSelf` | number | 是否为当前用户：`1` 是、`0` 否 |

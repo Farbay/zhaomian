@@ -1,9 +1,9 @@
 ---
 name: zhaomian-skills
-description: 照面助手 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索与报名
+description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名与创建
 ---
 
-# 照面助手
+# 照面小程序
 
 通过远湾开放平台 Open API 调用照面接口，为 AI Agent 提供账号、资料、圈子与活动能力。
 
@@ -31,7 +31,7 @@ npx skills add farbay/zhaomian -g
 | 获取未读消息总数 | 有未读消息吗 | GET | `/open/user/unread-counts` | `account/get-unread-counts.md` |
 | 发送短信 / 邮箱验证码 | 填表单要手机号或邮箱验证码 | POST | `/open/basic/mobile/captcha`、`/open/basic/email/captcha` | `account/send-captcha.md` |
 | 获取个人名片 | 看看我的名片 | GET | `/open/user/profile` | `profile/get-profile.md` |
-| 创建或修改名片 | 改昵称、简介、头像 / 创建名片 | POST | `/open/user/profile` | `profile/upsert-profile.md` |
+| 创建或修改名片 | 改名字（昵称）、简介、头像 / 创建名片 | POST | `/open/user/profile` | `profile/upsert-profile.md` |
 | 图片上传（凭证 + OSS 直传） | 传头像 / 传封面 / 表单要传图 | POST + PUT | `/open/basic/image/upload` | `image/upload-image.md` |
 | 获取用户所有标签 | 我有哪些标签 | GET | `/open/user/tags` | `tag/list-tags.md` |
 | 创建标签 | 加一个技能 / MBTI / 家乡标签 | POST | `/open/user/tags` | `tag/create-tag.md` |
@@ -132,10 +132,10 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 ## 分页
 
-- 列表接口统一游标分页：`count`（1-100）必传，默认 `10`
-- `next` 一律显式传：第一页传空字符串，后续页传上一页的 `data.page.next`；为空字符串表示没有下一页，不要自行拼接或猜测游标
-- 默认只取第一页：用户没说「还有吗」「下一页」「全部列出来」时，禁止自动翻页、连翻多页或循环拉取
-- 第一页返回 `data.total`，按「共 N 个，已显示前 10 个」提示，由用户决定是否继续
+- 搜索类接口（`circles/search`、`events/search`）为游标分页：`count`（1-100）必传，默认 `10`；`next` 必传，第一页传空字符串，后续页传上一页的 `data.page.next`，不要自行拼接或猜测游标
+- 搜索类接口返回 `data.list`、`data.total` 和 `data.page`；第一页按「共 N 个，已显示前 10 个」提示，由用户决定是否继续
+- 用户资料类列表（`user/tags`、`user/qas`、`user/socials`、`user/resumes`）不分页：一次返回全量 `data` 数组，没有 `page` 和 `total`，`count`、`next` 传了也不生效
+- 默认只取第一页：用户没说「还有吗」「下一页」「全部列出来」时，禁止自动翻页、连翻多页或循环拉取（仅适用于搜索类接口）
 
 ## 写操作
 
@@ -146,7 +146,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 ## 不支持的能力
 
-开放 API 只覆盖「读写自己的账号与资料」和「搜索、申请圈子与活动」。以下诉求没有对应接口，需要引导用户到「照面」App 完成，不要猜测路径或编造接口：
+开放 API 只覆盖「读写自己的账号与资料」和「搜索、申请圈子与活动」。以下诉求没有对应接口，需要引导用户到「照面」小程序完成，不要猜测路径或编造接口：
 
 - 取消活动报名、撤回圈子申请
 - 删除或修改已创建的活动、删除名片
@@ -162,5 +162,6 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 3. **图片数据**：提交业务接口时只传 `imageId`（UUIDv7），禁止提交 URL 或本地路径；展示图片时按 `image/upload-image.md` 组装 CDN 预览地址，不直接展示 ID
 4. **动态表单**：`formInput` 必须严格按返回的 `formJson` 构造，隐藏字段禁止提交，详见 `dynamic-form.md`
 5. **结果展示**：列表用编号展示方便用户选择；枚举值转成中文，不要直接展示数字；空结果时给出引导语
-6. **上下文衔接**：记住已查询的 cid / eid / pid / tagId / qaId / resumeId，后续操作无需用户重复提供
+6. **上下文衔接**：记住已查询的 cid / eid / pid / tagId / qaId / resumeId，后续操作无需用户重复提供；不要向用户复述这些已缓存的标识，也不要说明它们已经可用
 7. **隐私**：只展示接口实际返回的内容，不推断、不补充他人未公开的信息
+8. **下一步引导**：拿到结果后主动问一句要不要继续相关动作（看活动、加入圈子、补全资料等），一次最多给一到两个选项；只做引导，不自动搜索、不自动报名或申请；同一方向引导过就不再重复；接口文档另有规定时以接口文档为准
