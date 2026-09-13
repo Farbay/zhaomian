@@ -9,7 +9,7 @@
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `channel` | string | 否 | 创建/修改渠道，传当前工具名称（工具叫什么就传什么，如 Codex 传 `codex`）；不传或传空串时后端记为 `open` |
-| `nickname` | string | 是 | 昵称，最长 16 字 |
+| `nickname` | string | 是 | 名字，最长 16 字 |
 | `gender` | number | 是 | `0` 未知、`1` 男、`2` 女 |
 | `birthday` | string | 是 | `YYYY-MM-DD` 或空字符串 |
 | `bio` | string | 是 | 个人简介，15-255 字，会做语义检测 |

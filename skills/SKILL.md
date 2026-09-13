@@ -31,7 +31,7 @@ npx skills add farbay/zhaomian -g
 | 获取未读消息总数 | 有未读消息吗 | GET | `/open/user/unread-counts` | `account/get-unread-counts.md` |
 | 发送短信 / 邮箱验证码 | 填表单要手机号或邮箱验证码 | POST | `/open/basic/mobile/captcha`、`/open/basic/email/captcha` | `account/send-captcha.md` |
 | 获取个人名片 | 看看我的名片 | GET | `/open/user/profile` | `profile/get-profile.md` |
-| 创建或修改名片 | 改昵称、简介、头像 / 创建名片 | POST | `/open/user/profile` | `profile/upsert-profile.md` |
+| 创建或修改名片 | 改名字（昵称）、简介、头像 / 创建名片 | POST | `/open/user/profile` | `profile/upsert-profile.md` |
 | 图片上传（凭证 + OSS 直传） | 传头像 / 传封面 / 表单要传图 | POST + PUT | `/open/basic/image/upload` | `image/upload-image.md` |
 | 获取用户所有标签 | 我有哪些标签 | GET | `/open/user/tags` | `tag/list-tags.md` |
 | 创建标签 | 加一个技能 / MBTI / 家乡标签 | POST | `/open/user/tags` | `tag/create-tag.md` |
