@@ -1,4 +1,4 @@
-# 照面 Skills
+# 照面 skill
 
 为 AI Agent 提供「照面」开放能力的 Skill 集合，支持账号引导、名片资料、标签/问答/社媒/履历、圈子与活动搜索和报名等能力。
 
@@ -16,7 +16,7 @@ npx skills add farbay/zhaomian -g
 把下面这段提示词发给任意支持 Skills 的 Agent（Claude Code、Codex、Cursor 等）即可完成安装：
 
 ```text
-请帮我安装照面 Skills：
+请帮我安装照面 skill：
 npx skills add farbay/zhaomian -g
 ```
 
