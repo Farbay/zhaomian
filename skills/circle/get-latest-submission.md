@@ -17,7 +17,7 @@
 | `submissionId` | number | 申请记录 ID |
 | `cid` | string | 圈子 ID |
 | `uid` | string | 申请人用户 ID |
-| `channel` | string | 申请渠道：提交时所用工具的标识；未上报时为空字符串 |
+| `channel` | string | 申请渠道：提交时所用工具的标识，返回归一化后的小写中划线格式；未上报时为空字符串 |
 | `formId` | string | 申请表单 ID |
 | `formInput` | array | 表单数据 |
 | `review` | object | 审批关联信息；没有时为 `{}` |

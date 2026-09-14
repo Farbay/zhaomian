@@ -176,7 +176,7 @@
 6. **提交**：
    - 圈子：`POST /open/circles/{cid}/submissions`（详见 `circle/join-circle.md`），body `{ "channel": "codex", "formId": "...", "formInput": [...] }`
    - 活动：`POST /open/events/{eid}/submissions`（详见 `event/signup-event.md`），body `{ "pid": "报名名片ID", "channel": "codex", "formId": "...", "formInput": [...] }`；`pid` 取自 `profile/get-profile.md` 的 `data.pid`
-   - 两处的 `channel` 都传**当前工具标识**（见 `../SKILL.md` 的「channel 渠道标识」），上面写法只是格式示例
+   - 两处的 `channel` 都传**当前工具标识**（见 `../SKILL.md` 的「channel 渠道标识」）；服务端会归一化为小写中划线格式，上面写法只是格式示例
 7. **处理回包**：校验失败时读取 `msg` 与 `det[]` 定位字段，修正后重试；不要跳过校验直接重试相同数据。
 
 ## 完整示例

@@ -8,7 +8,7 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `channel` | string | 否 | 创建/修改渠道，传当前工具名称（工具叫什么就传什么，如 Codex 传 `codex`）；不传或传空串时后端记为 `open` |
+| `channel` | string | 否 | 创建/修改渠道，传当前工具名称；后端统一归一化为小写中划线格式，不传或传空串时记为 `open`。预设见 `../SKILL.md`，也可传其他 AI coding agent 名称 |
 | `nickname` | string | 是 | 名字，最长 16 字 |
 | `gender` | number | 是 | `0` 未知、`1` 男、`2` 女 |
 | `birthday` | string | 是 | `YYYY-MM-DD` 或空字符串 |
@@ -24,7 +24,7 @@
 
 ## 注意
 
-- **必须上报 `channel`**：传当前工具名称，取值规则见 `../SKILL.md` 的「channel 渠道标识」；不要传 `open`。
+- **必须上报 `channel`**：传当前工具名称，取值和归一化规则见 `../SKILL.md` 的「channel 渠道标识」；不要传 `open`。
 - **更新是完整提交**：`nickname`、`gender`、`birthday`、`bio`、`identity` 都要提交，不换头像时才省略 `avatarImageId`。
 - **头像必须先上传**：`avatarImageId` 必须是用 `avatar` 类型按 `../image/upload-image.md` 上传成功的 `imageId`，禁止提交 `cdnUrl` 或本地路径；用错类型会报「头像不存在」。
 - 创建时没有头像会报「创建名片时 avatarImageId 不能为空」。

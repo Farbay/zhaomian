@@ -18,7 +18,7 @@
 | `eid` | string | 活动 ID |
 | `pid` | string | 报名名片 ID |
 | `uid` | string | 报名用户 ID |
-| `channel` | string | 报名渠道：提交时所用工具的标识；未上报时为空字符串 |
+| `channel` | string | 报名渠道：提交时所用工具的标识，返回归一化后的小写中划线格式；未上报时为空字符串 |
 | `signupSource` | number | `0` 用户主动报名、`1` 主办方邀请、`-2147483648` 未知 |
 | `auditReason` | number | `0` 常规报名审核、`1` 超限候补审核、`-2147483648` 未知 |
 | `status` | number | 报名状态：`1` 待审核、`2` 通过、`3` 拒绝、`4` 已取消 |

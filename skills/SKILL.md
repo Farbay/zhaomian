@@ -101,9 +101,11 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 ## channel 渠道标识
 
-`channel` 记录「是谁调用的」，值是调用方当前所用工具的名称；它是**自报字段**，后端只按字符串存储（≤64 字符），无枚举、无白名单校验，任何工具都传自己的名字，不需要事先登记。
+`channel` 记录「是谁调用的」，值是调用方当前所用工具的名称；它是**自报字段**，后端会调用 `AgentLogoUtil.normalizeChannel` 统一归一化为小写中划线格式（≤64 字符），无枚举、无白名单校验，任何工具都传自己的名字，不需要事先登记。
 
-- 用工具名本身，小写、不带版本号、不加 `-agent` / `-client` 后缀：如 Codex 传 `codex`（示例仅示范格式，实际传当前工具名）
+当前已有 logo 预设（仅供参考，不限于此）：`claude-code`、`cline`、`codebuddy`、`codewhale`、`codex`、`continue`、`cursor`、`deepseek-harness`、`gemini-cli`、`github-copilot`、`hermes-agent`、`kimi`、`manus`、`openclaw`、`opencode`、`openhands`、`pi`、`qoder`、`qwen-code`、`trae`、`warp`、`workbuddy`。也可以传其他 AI coding agent 名称。
+
+- 用工具名本身，不带版本号、不加 `-agent` / `-client` 后缀；服务端会统一归一化格式：如 Codex 传 `codex`（示例仅示范格式，实际传当前工具名）
 - 接口定义了 `channel` 就一律传，不要省略；不要传 `open`、`api` 这类来源描述，只有确实没有工具名时才传 `open`（如手写 curl）
 - 省略或传空串时的落库值以各接口文档为准：名片记为 `open`，圈子申请、活动报名记为空字符串
 
