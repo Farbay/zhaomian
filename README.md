@@ -57,6 +57,7 @@ export FARBAY_OPEN_API_KEY=fb-sk-xxxxxxxx
 |------|------|----------|
 | 账号与引导 | 账号信息、Onboarding 意图、完成确认、未读消息、短信/邮箱验证码 | [`skills/account/`](skills/account/) |
 | 个人名片 | 查看、创建、修改个人名片 | [`skills/profile/`](skills/profile/) |
+| 互动名片 | 查看拍一拍、标签认可、关注与印象关系中的对方名片 | [`skills/interaction/`](skills/interaction/) |
 | 图片上传 | 上传凭证、OSS 直传、imageId 使用规范 | [`skills/image/`](skills/image/) |
 | 标签管理 | 标签的增删改查 | [`skills/tag/`](skills/tag/) |
 | 问答管理 | 普通问答与雷区问答的增删改查 | [`skills/qa/`](skills/qa/) |

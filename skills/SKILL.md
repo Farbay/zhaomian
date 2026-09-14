@@ -32,6 +32,10 @@ npx skills add farbay/zhaomian -g
 | 发送短信 / 邮箱验证码 | 填表单要手机号或邮箱验证码 | POST | `/open/basic/mobile/captcha`、`/open/basic/email/captcha` | `account/send-captcha.md` |
 | 获取个人名片 | 看看我的名片 | GET | `/open/user/profile` | `profile/get-profile.md` |
 | 创建或修改名片 | 改名字（昵称）、简介、头像 / 创建名片 | POST | `/open/user/profile` | `profile/upsert-profile.md` |
+| 分页获取拍一拍互动名片 | 我拍过谁 / 谁拍过我 | GET | `/open/user/tickles` | `interaction/list-tickles.md` |
+| 分页获取标签认可互动名片 | 我认可过谁 / 谁认可过我 | GET | `/open/user/tag-approvals` | `interaction/list-tag-approvals.md` |
+| 分页获取关注互动名片 | 我关注了谁 / 我的粉丝 | GET | `/open/user/follows` | `interaction/list-follows.md` |
+| 分页获取印象互动名片 | 我给谁写过印象 / 谁给我写过印象 | GET | `/open/user/impressions` | `interaction/list-impressions.md` |
 | 图片上传（凭证 + OSS 直传） | 传头像 / 传封面 / 表单要传图 | POST + PUT | `/open/basic/image/upload` | `image/upload-image.md` |
 | 获取用户所有标签 | 我有哪些标签 | GET | `/open/user/tags` | `tag/list-tags.md` |
 | 创建标签 | 加一个技能 / MBTI / 家乡标签 | POST | `/open/user/tags` | `tag/create-tag.md` |
