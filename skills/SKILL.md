@@ -163,7 +163,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 1. **时间数据**：`xxxTime` 字段均为毫秒级 Unix 时间戳，展示时按 `Asia/Shanghai` 转 `YYYY-MM-DD HH:mm:ss`（如 `1789018856000` → `2026-09-10 13:40:56`），不直接展示原始数字；`-1`、`0` 等哨兵值按对应接口文档解释。用户给自然语言时间（如「下周三」「2024 年 3 月」）时先按 `Asia/Shanghai` 解析成具体时刻再转毫秒，只给日期按当天 `00:00:00` 计算
 2. **文案字段**：圈子 `name`、`description`，活动 `title`、`content` 等文案字段接口已统一返回字符串，直接展示即可，不要按多语言对象解析
-3. **图片数据**：提交业务接口时只传 `imageId`（UUIDv7），禁止提交 URL 或本地路径；展示图片时按 `image/upload-image.md` 组装 CDN 预览地址，不直接展示 ID
+3. **图片数据**：提交业务接口时只传 `imageId`（UUIDv7），禁止提交 URL 或本地路径；展示图片时按 `image/upload-image.md` 组装 CDN 预览地址，不直接展示 ID。Codex Markdown 对远程图片（`https://`）存在跨平台预览问题，需要在回复中展示远程图片时先下载到临时文件，再用本地绝对路径引用；不要直接把 CDN/远程 URL 写入 Markdown 图片语法
 4. **动态表单**：`formInput` 必须严格按返回的 `formJson` 构造，隐藏字段禁止提交，详见 `dynamic-form.md`
 5. **结果展示**：列表用编号展示方便用户选择；枚举值转成中文，不要直接展示数字；空结果时给出引导语
 6. **上下文衔接**：记住已查询的 cid / eid / pid / tagId / qaId / resumeId，后续操作无需用户重复提供；不要向用户复述这些已缓存的标识，也不要说明它们已经可用

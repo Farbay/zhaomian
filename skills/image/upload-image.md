@@ -98,6 +98,7 @@ curl -X PUT "${UPLOAD_ADDRESS}" \
 | 资源语义 / 字段 | 基础存储路径 | 推荐后缀 |
 |------|------|------|
 | 名片 `avatarImageId` | `user/{uid}/avatar/{imageId}` | `!250wp` |
+| 名片 `qrCodeImageId` | `user/{uid}/qrcode/{imageId}` | `!750wp` |
 | 履历图片 | `user/{uid}/resume/{imageId}` | `!1500wp` |
 | 圈子 `logoImageId` | `circle/logo/{imageId}` | `!250wp` |
 | 圈子 `qrCodeImageId` | `circle/qrcode/{imageId}` | `!750wp` |

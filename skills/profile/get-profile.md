@@ -14,6 +14,7 @@
 | `gender` | number | 性别：`0` 未知、`1` 男性、`2` 女性 |
 | `birthday` | string | 生日，`YYYY-MM-DD`；未填写时为空字符串 |
 | `avatarImageId` | string | 头像图片 ID |
+| `qrCodeImageId` | string | 名片二维码图片 ID；未生成时可能为空 |
 | `bio` | string | 个人简介；未填写时为空字符串 |
 | `identity` | string | 身份信息，如「远湾产品经理」 |
 | `createTime` | number | 创建时间，毫秒时间戳 |
@@ -29,5 +30,6 @@
 - 履历与教育履历来自同一次查询，展示时按 `resumeType` 分成两块（`1` 职业、`2` 教育）；同组内按开始时间倒序，最新的在最前。
 - 履历、标签、问答、社媒不在本接口响应里，分别见 `../resume/list-resumes.md`、`../tag/list-tags.md`、`../qa/list-qas.md`、`../social/list-socials.md`。
 - 接口不返回头像 `cdnUrl`，按 `../image/upload-image.md` 用 `uid + avatarImageId` 组装预览地址。
+- `qrCodeImageId` 非空时，按 `../image/upload-image.md` 组装名片二维码预览地址并向用户展示。
 - `data` 为 `null` 时说明还没有名片，回复「你还没有创建名片。你可以自己写，也可以把简历、个人主页链接等资料发给我，我整理好之后先给你确认，再创建。」，并按 `upsert-profile.md` 创建；创建时头像必填，整理资料时一并提醒用户提供头像图片。
 - 开放 API 只能读写默认名片，没有多名片管理能力。
