@@ -104,10 +104,28 @@
 | `DatePicker` | string | 按 `props.format`（如 `YYYY-MM-DD`）提交，不要自行转换 |
 | `DateRangePicker` | 数组 | 固定两个字符串 `[开始日期, 结束日期]`，格式同 `props.format` |
 | `TimePicker` | string | 按 `props.format`（默认 `HH:mm`）提交 |
+| `CascadePicker` | 数组 | 级联选项值路径，从根开始按层提交，如 `["college_computer", "department_software"]`；逐层校验父子关系。`props.levels` 配置 2～4 级，`options` 为递归选项树；非必填未填写时提交 `[]`，必填时不能为空 |
 | `Image` | 数组 | 元素为 `{ "imageId": "..." }`，先读 `image/upload-image.md` 上传 |
 | `File` | 数组 | 元素为 `{ "fileId": "..." }`；开放 API 暂无文件上传能力，无法获取 fileId 时告知用户到 App 端完成 |
 | `MobileVerify` | 对象 | `{ "mobile": "手机号", "code": "验证码" }`；微信小程序手机号组件场景为 `{ "code": "..." }`。发送验证码见 `account/send-captcha.md` |
 | `EmailVerify` | 对象 | `{ "email": "邮箱", "code": "验证码" }`；`props.domain` 非空时邮箱域名必须在白名单内。发送验证码见 `account/send-captcha.md` |
+
+### CascadePicker（级联选择）
+
+`CascadePicker` 使用 `options` 递归选项树，`props.levels` 按层描述级联结构，支持 2～4 级。`props.mode` 可选且当前仅支持 `default`；未知值会被拒绝，不要自行回退。每个 level 必须有非空的 `label.fallback`，可配置该级选项值与文案的 `outputKey` / `outputLabelKey`（不要配置顶层同名字段）。
+
+提交的 `value` 是从根开始的选项值路径，必须逐层匹配父子关系，例如：
+
+```json
+{
+  "id": "department",
+  "component": "CascadePicker",
+  "label": "所属院系",
+  "value": ["college_computer", "department_software"]
+}
+```
+
+选到叶子节点即可提前结束路径；非必填未填写时提交 `[]`，必填时不能为空。父级切换后应重置后代；按 `links` 判定隐藏时禁止提交。
 
 ## validates 规则
 
