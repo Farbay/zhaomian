@@ -1,6 +1,6 @@
 ---
 name: zhaomian-skills
-description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名与创建
+description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名与创建
 ---
 
 # 照面小程序
@@ -62,6 +62,7 @@ npx skills add farbay/zhaomian -g
 | 查询已参加活动列表 | 我报名了哪些活动 | GET | `/open/events/signed-up` | `event/list-signed-up-events.md` |
 | 查询活动报名最近记录 | 我的报名通过了吗 | GET | `/open/events/{eid}/submissions/latest` | `event/get-latest-submission.md` |
 | 报名参加活动 | 报名这个活动 | POST | `/open/events/{eid}/submissions` | `event/signup-event.md` |
+| 取消活动报名 | 取消报名 / 撤回报名 / 不参加了 | DELETE | `/open/events/{eid}/submissions/me` | `event/cancel-signup.md` |
 
 ### 规范文档
 
@@ -130,7 +131,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 | `131` | 圈子不存在 | 重新搜索圈子 |
 | `133` | 圈子申请不存在 | 说明用户还没申请过该圈子 |
 | `150` | 活动不存在 | 重新搜索活动 |
-| `151` | 活动报名申请不存在 | 说明用户还没报名该活动 |
+| `151` | 当前没有有效报名记录 | 可能未报名或已取消，不要解释为从未报名 |
 | `170` | 动态表单不存在 | 重新查询圈子 / 活动后再提交 |
 | `171` | 社媒平台不存在 | 说明该平台暂未接入 |
 
@@ -149,12 +150,13 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 - 删除类操作必须先确认目标（用列表编号让用户选择），不要凭 ID 猜测
 - 报名、申请类接口在已有有效记录时会直接返回原记录，不会重复创建，重试是安全的
 - 网络超时或 HTTP 5xx 可以按相同参数重试一次；HTTP 4xx 和业务码非 0 时不要原样重试，先按 `msg` 修正
+- 取消活动报名的授权与超时处理以 `event/cancel-signup.md` 为准，避免重复确认或误取消新报名
 
 ## 不支持的能力
 
 开放 API 只覆盖「读写自己的账号与资料」和「搜索、申请圈子与活动」。以下诉求没有对应接口，需要引导用户到「照面」小程序完成，不要猜测路径或编造接口：
 
-- 取消活动报名、撤回圈子申请
+- 撤回圈子申请
 - 删除或修改已创建的活动、删除名片
 - 切换或管理多张名片（开放 API 只能读写默认名片）
 - 查看消息内容（只能查询未读数量）

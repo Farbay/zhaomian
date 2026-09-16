@@ -1,6 +1,6 @@
 # 照面 skill
 
-为 AI Agent 提供「照面」开放能力的 Skill 集合，支持账号引导、名片资料、标签/问答/社媒/履历、圈子与活动搜索和报名等能力。
+为 AI Agent 提供「照面」开放能力的 Skill 集合，支持账号引导、名片资料、标签/问答/社媒/履历、圈子与活动搜索、报名和取消报名等能力。
 
 > 项目名：`zhaomian`（照面拼音，`zm` 为其缩写）。
 > 每个接口一个独立文档，Agent 按需加载；完整接口索引见 [`skills/SKILL.md`](skills/SKILL.md)。
@@ -48,6 +48,7 @@ export FARBAY_OPEN_API_KEY=fb-sk-xxxxxxxx
 "最近有什么技术活动"
 "帮我申请加入这个圈子"
 "这个活动还能报名吗"
+"取消这个活动的报名"
 "看看我的个人简介和履历"
 ```
 
@@ -64,7 +65,7 @@ export FARBAY_OPEN_API_KEY=fb-sk-xxxxxxxx
 | 社媒账号 | 社媒账号的绑定与解绑 | [`skills/social/`](skills/social/) |
 | 履历管理 | 职业、教育等履历的增删改查（含类型字段语义） | [`skills/resume/`](skills/resume/) |
 | 圈子 | 搜索公开圈子、已加入圈子、申请加入、创建活动 | [`skills/circle/`](skills/circle/) |
-| 活动 | 搜索活动、已参加活动、报名 | [`skills/event/`](skills/event/) |
+| 活动 | 搜索活动、已参加活动、报名、取消报名 | [`skills/event/`](skills/event/) |
 | 动态表单 | 表单结构、联动规则与提交格式 | [`skills/dynamic-form.md`](skills/dynamic-form.md) |
 
 ## 版本
