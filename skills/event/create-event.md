@@ -91,10 +91,10 @@
 | `offline.city` | string | 城市，如「深圳市」 |
 | `offline.district` | string | 区 / 县，如「南山区」 |
 | `offline.address` | string | 街道、门牌等详细地址；不要把省市区或场地名混写到不相干字段 |
-| `offline.longitude` | string | 经度的十进制字符串，如 `"113.950000"`，不是纬度 |
-| `offline.latitude` | string | 纬度的十进制字符串，如 `"22.540000"`，不是经度 |
+| `offline.longitude` | string | 经度，采用 GCJ-02 坐标系的十进制度数字符串，如 `"113.950000"` |
+| `offline.latitude` | string | 纬度，采用 GCJ-02 坐标系的十进制度数字符串，如 `"22.540000"` |
 
-不猜测行政区、坐标、链接或密码；无法可靠拆分的地址保留在 `address`。地点未定时确认是否用 `notice`。
+线下活动尽可能补齐经纬度，可直接使用高德／腾讯地图选点结果。不猜测行政区、坐标、链接或密码；无法可靠拆分的地址保留在 `address`。地点未定时确认是否用 `notice`。
 
 以下是线下场地的**序列化前对象**，不能直接作为 `venue` 字段发送：
 
