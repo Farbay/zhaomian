@@ -2,54 +2,23 @@
 
 `PUT /open/events/{eid}` · 鉴权：Bearer apiKey
 
-要求活动信息编辑权限。先读取管理详情，再全量提交活动字段；保留创建者名片主理人以及未修改的设置。不是局部更新，不会修改活动状态或报名表绑定。关系中的 sort 越大越靠前，更新时保留原值；省略会重置为 0。
+要求活动信息编辑权限。这是**全量替换**，不是局部更新；不会修改活动状态或报名表绑定。
 
-请求为完整活动字段，除 formId、status 外与创建契约一致；见 `create-event.md`。relations 中 relationType 分别为主办方、联合举办方、主理人，提交时转换成 organizer、coOrganizers、hosts。
+## 构造请求
 
-## 请求体示例
+1. 先按 `get-management.md` 读取管理详情，保留所有未修改设置和创建时的创建者名片主理人。
+2. 必须读取 `create-event.md` 的字段类型、场地、门槛和时间约束。请求字段与创建一致，但**不提交 `formId`、`status`**；修改绑定用 `bind-form.md`，状态流转用 `update-status.md`。
+3. 将详情的 `relations` 按 `relationType` 转换，不直接回传详情对象：
 
-```json
-{
-  "organizer": {
-    "entityType": 1,
-    "entityId": "019d0a18-1234-733f-acc2-92b8507b7003",
-    "uid": "019d0a18-1234-733f-acc2-92b8507b7002",
-    "visible": 1
-  },
-  "coOrganizers": [],
-  "hosts": [
-    {
-      "entityType": 1,
-      "entityId": "019d0a18-1234-733f-acc2-92b8507b7003",
-      "uid": "019d0a18-1234-733f-acc2-92b8507b7002",
-      "visible": 1
-    }
-  ],
-  "title": "周末技术交流",
-  "content": "交流技术与协作经验",
-  "bannerImageIds": [
-    "019d0a18-1234-733f-acc2-92b8507b7777"
-  ],
-  "prerequisite": 0,
-  "prerequisiteData": {},
-  "requireApproval": 0,
-  "participantLimit": 0,
-  "allowOverLimit": 0,
-  "publishMode": 0,
-  "publishTime": 0,
-  "signupEndTime": 0,
-  "startTime": 1800003600000,
-  "endTime": 1800010800000,
-  "venueVisibility": 0,
-  "venue": {
-    "notice": {
-      "title": "地点另行通知"
-    }
-  },
-  "scope": 1,
-  "rosterVisibility": 2
-}
-```
+| `relationType` | 请求字段 | 结构 |
+| --- | --- | --- |
+| `1` 主办方 | `organizer` | 单个关系对象 |
+| `2` 联合举办方 | `coOrganizers` | 完整数组，无则 `[]` |
+| `3` 主理人 | `hosts` | 完整数组，必须包含创建时的创建者名片 |
+
+关系对象保留 `entityType`、`entityId`、`uid`、`sort`、`visible`。`sort` 越大越靠前，省略会重置为 `0`。
+
+`venue`、`prerequisiteData` 必须为 JSON 对象字符串；详情若返回对象，提交前序列化一次，已是字符串则不要重复序列化。其余字段使用创建示例的格式，替换为本次编辑后的完整数据，不用示例值覆盖现有设置。
 
 ## 响应示例
 

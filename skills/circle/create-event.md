@@ -2,59 +2,54 @@
 
 `POST /open/circles/{cid}/events` · 鉴权：Bearer apiKey
 
-以路径中的圈子为主办方创建活动，直接进入「待审核」状态；创建者和主理人为当前登录用户。uid 由 API Key 解析。
+当前用户须已有名片，且为圈子管理员或有 `event.info.update` 权限；可先查 `search-circles.md` / `list-joined-circles.md` 的 `eventCreateAllowed`，无权限返回 HTTP `403`。
+
+这是固定默认设置的简化接口。需要草稿或自定义下方默认设置时，使用 `../event/create-event.md` 的完整接口并将 organizer 设为圈子；不要混用请求字段。
 
 ## 请求
 
-### Path
+Path `cid`：实际查询得到的主办方圈子 UUID v7，不是名称、uid 或 pid。
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `cid` | string | 是 | 主办方圈子 ID |
+Body 以下字段全部必传且不能为 `null`；integer 为 JSON 整数，不是字符串或布尔值。
 
-### Body
+| 字段 | JSON 类型 | 说明 |
+| --- | --- | --- |
+| `title` | string | 非空白标题，最多 128 字 |
+| `content` | string | 非空白介绍，最多 10000 字，不传国际化对象 |
+| `coverImageId` | string | 单个非空 UUID v7；先按 `../image/upload-image.md` 上传 `eventBanner` 图片，不传数组、URL 或本地路径 |
+| `startTime` | integer | 开始毫秒时间戳，`> 0`；同时作为报名截止时间，不能早于服务端当前发布时间 |
+| `endTime` | integer | 结束毫秒时间戳，必须 `> startTime` |
+| `venue` | string | **JSON 对象字符串**，结构见下方 |
+| `scope` | integer | `0` 私有（创建者及分享链接 / 二维码可见，不是仅自己可见），`1` 公开；不是地点可见性 |
+| `requireApproval` | integer | 报名审核：`0` 无需，`1` 需要；不是活动发布审核 |
 
-| 参数 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `title` | string | 是 | 活动标题，最长 128 字 |
-| `content` | string | 是 | 活动详细介绍，最长 10000 字 |
-| `coverImageId` | string | 是 | 封面图 ID，先用 `eventBanner` 类型按 `../image/upload-image.md` 上传 |
-| `startTime` | number | 是 | 开始时间，毫秒时间戳 |
-| `endTime` | number | 是 | 结束时间，毫秒时间戳，必须大于开始时间 |
-| `venue` | object | 是 | 场地详情 JSON，见下方说明 |
-| `scope` | number | 是 | 可见范围：`0` 私有、`1` 公开 |
-| `requireApproval` | number | 是 | 是否需要报名审核：`0` 无需审核、`1` 需要审核 |
+时间按 `Asia/Shanghai` 解析，精确到分钟（`time % 60000 == 0`），不传秒级时间戳或日期字符串。
 
-### venue 场地结构
+### 场地
 
-| 节点 | 说明 |
-|------|------|
-| `offline` | 线下场地对象，可含 `title` / `name`、`province`、`city`、`district`、`address` |
-| `online` | 线上活动对象，可含 `title` |
-| `notice` | 「另行通知」对象，可含 `title` |
+构造前必须读取 `../event/create-event.md` 的「venue 场地结构」，按其中字段语义填写场地名、参与指引、线上链接、地址和坐标，不猜测未知信息。
 
-规则：`offline`、`online`、`notice` 至少要有一个；`notice` 不能与其他节点共存。用户说的具体地点从「省 / 市 / 区」拆到对应字段，只给一句话地址时放到 `address`。
+本接口不支持空场地：至少包含 `notice`、`online`、`offline` 中一个对象节点；`offline` 与 `online` 可组合，`notice` 不可与其他节点共存。将场地对象序列化为字符串后放入 `venue`，不要直接传嵌套对象；请求示例见下方。
 
-## 响应
+## 固定默认设置（无需提交）
 
-| 字段 | 描述 |
-|------|------|
-| `data.eid` | 新建活动 ID |
-| `data.qrCodeImageId` | 活动二维码 Image ID；图片服务暂时生成失败时为空字符串 |
+- 主办方为路径 cid；创建者为当前用户，当前默认名片自动成为主理人，无联合举办方。
+- 状态为待审核 `1`，立即发布；实际状态由后续流转决定，不保证返回时已发布。
+- 报名截止为 `startTime`；无圈子门槛、人数上限或超限报名，不绑定报名表。
+- 封面列表为 `[coverImageId]`；地点报名后可见，报名名单不可见。
 
-HTTP `403` 表示当前用户不是圈子管理员，也没有该圈子的活动信息编辑权限。
+## 响应与重试
 
-## 服务端默认回填
+| 字段 | 说明 |
+| --- | --- |
+| `data.eid` | 新建活动 ID，保存用于查询与管理 |
+| `data.qrCodeImageId` | 二维码图片 ID，生成失败时为 `""`；非空时按图片文档组装预览地址 |
 
-以下字段不需要提交：报名截止时间（等于开始时间）、活动状态（待审核 `1`）、主办方（路径中的 cid）、创建者 / 主理人（当前用户）、封面图列表（`[coverImageId]`）、报名门槛（无）、人数上限（无）、发布模式（立即发布）、地点可见性（报名后可见）、报名名单可见性（不可见）、报名表单（未绑定）。
-
-## 注意
-
-1. 只有圈子管理员，或拥有该圈子 `event.info.update` 权限的用户才能创建；创建前可先看 `search-circles.md` / `list-joined-circles.md` 返回的 `eventCreateAllowed`。
-2. 封面必须先用 `../image/upload-image.md` 的 `eventBanner` 类型上传，业务接口只接受 `imageId`。
-3. 创建成功后提示活动已提交审核，并记录返回的 `eid`；`qrCodeImageId` 非空时展示二维码预览。
+成功后提示已提交审核；实际状态可用 `../event/get-management.md` 查询。超时或 HTTP 5xx 后禁止直接重试，先按 `../event/list-created-events.md` 核对，无法确认则停止并让用户决定，避免重复创建。
 
 ## 示例
+
+执行前替换实际圈子 / 图片 ID 和用户确认的未来活动时间，并确认场地、可见范围与报名审核设置；示例值不是默认选择。
 
 ```bash
 curl -X POST "${FARBAY_OPEN_HOST}/open/circles/${CID}/events" \
@@ -64,9 +59,9 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/circles/${CID}/events" \
     "title": "远湾技术沙龙",
     "content": "围绕技术协作的线下交流活动。",
     "coverImageId": "019d0a18-1234-733f-acc2-92b8507b7777",
-    "startTime": 1741425600000,
-    "endTime": 1741432800000,
-    "venue": { "offline": { "title": "远湾创新中心 3F", "city": "上海", "district": "浦东新区" } },
+    "startTime": 1800003600000,
+    "endTime": 1800010800000,
+    "venue": "{\"offline\":{\"title\":\"远湾创新中心 3F\",\"country\":\"中国\",\"province\":\"上海市\",\"city\":\"上海市\",\"district\":\"浦东新区\",\"address\":\"示例路 100 号\"}}",
     "scope": 1,
     "requireApproval": 0
   }'
