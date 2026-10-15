@@ -65,7 +65,7 @@ export FARBAY_OPEN_API_KEY=fb-sk-xxxxxxxx
 | 社媒账号 | 社媒账号的绑定与解绑 | [`skills/social/`](skills/social/) |
 | 履历管理 | 职业、教育等履历的增删改查（含类型字段语义） | [`skills/resume/`](skills/resume/) |
 | 圈子 | 搜索公开圈子、已加入圈子、申请加入、创建活动 | [`skills/circle/`](skills/circle/) |
-| 活动 | 搜索活动、已参加活动、报名、取消报名 | [`skills/event/`](skills/event/) |
+| 活动 | 搜索、报名、个人活动创建与管理、报名表、报名名单、签到入口 | [`skills/event/`](skills/event/) |
 | 动态表单 | 表单结构、联动规则与提交格式 | [`skills/dynamic-form.md`](skills/dynamic-form.md) |
 
 ## 版本

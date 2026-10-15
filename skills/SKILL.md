@@ -1,6 +1,6 @@
 ---
 name: zhaomian-skills
-description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名与创建
+description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名、个人活动创建与管理
 ---
 
 # 照面小程序
@@ -58,6 +58,16 @@ npx skills add farbay/zhaomian -g
 | 查询圈子申请最近记录 | 我的申请通过了吗 | GET | `/open/circles/{cid}/submissions/latest` | `circle/get-latest-submission.md` |
 | 申请加入圈子 | 加入这个圈子 | POST | `/open/circles/{cid}/submissions` | `circle/join-circle.md` |
 | 创建圈子活动 | 在圈子里办个活动 | POST | `/open/circles/{cid}/events` | `circle/create-event.md` |
+| 创建个人活动 | 创建个人活动 | POST | `/open/events` | `event/create-event.md` |
+| 修改活动 | 修改活动 | PUT | `/open/events/{eid}` | `event/update-event.md` |
+| 更新活动状态 | 更新活动状态 | PUT | `/open/events/{eid}/status` | `event/update-status.md` |
+| 更新活动报名表 | 更新活动报名表 | PUT | `/open/events/{eid}/form` | `event/bind-form.md` |
+| 查询我创建的活动 | 查询我创建的活动 | GET | `/open/events/created` | `event/list-created-events.md` |
+| 获取活动管理详情 | 获取活动管理详情 | GET | `/open/events/{eid}/management` | `event/get-management.md` |
+| 查询活动报名名单 | 查询活动报名名单 | GET | `/open/events/{eid}/submissions` | `event/list-submissions.md` |
+| 创建活动报名表 | 创建活动报名表 | POST | `/open/basic/dynamic-forms` | `event/create-form.md` |
+| 获取报名表结构 | 获取报名表结构 | GET | `/open/basic/dynamic-forms/{formId}` | `event/get-form.md` |
+| 生成活动签到凭证 | 生成活动签到凭证 | POST | `/open/events/{eid}/check-in-scenes/{source}` | `event/generate-check-in.md` |
 | 搜索活动 | 最近有什么活动 | GET | `/open/events/search` | `event/search-events.md` |
 | 查询已参加活动列表 | 我报名了哪些活动 | GET | `/open/events/signed-up` | `event/list-signed-up-events.md` |
 | 查询活动报名最近记录 | 我的报名通过了吗 | GET | `/open/events/{eid}/submissions/latest` | `event/get-latest-submission.md` |
@@ -149,15 +159,15 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 - 创建、修改、删除、报名、申请等写操作，在参数齐全后先向用户复述一遍即将提交的内容，确认后再调用
 - 删除类操作必须先确认目标（用列表编号让用户选择），不要凭 ID 猜测
 - 报名、申请类接口在已有有效记录时会直接返回原记录，不会重复创建，重试是安全的
-- 网络超时或 HTTP 5xx 可以按相同参数重试一次；HTTP 4xx 和业务码非 0 时不要原样重试，先按 `msg` 修正
+- 网络超时或 HTTP 5xx 可按接口文档决定是否重试；创建活动先查询结果，禁止直接重试。HTTP 4xx 和业务码非 0 时不要原样重试，先按 `msg` 修正
 - 取消活动报名的授权与超时处理以 `event/cancel-signup.md` 为准，避免重复确认或误取消新报名
 
 ## 不支持的能力
 
-开放 API 只覆盖「读写自己的账号与资料」和「搜索、申请圈子与活动」。以下诉求没有对应接口，需要引导用户到「照面」小程序完成，不要猜测路径或编造接口：
+开放 API 支持自己的账号与资料、圈子搜索和申请，以及活动创建、管理、报名与签到入口。以下诉求没有对应接口，需要引导用户到「照面」小程序完成，不要猜测路径或编造接口：
 
 - 撤回圈子申请
-- 删除或修改已创建的活动、删除名片
+- 删除活动或名片（活动支持编辑、取消和归档）
 - 切换或管理多张名片（开放 API 只能读写默认名片）
 - 查看消息内容（只能查询未读数量）
 - 上传普通文件（动态表单 `File` 组件没有对应的文件上传接口）
@@ -166,7 +176,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 ## 通用规则
 
 1. **时间数据**：`xxxTime` 字段均为毫秒级 Unix 时间戳，展示时按 `Asia/Shanghai` 转 `YYYY-MM-DD HH:mm:ss`（如 `1789018856000` → `2026-09-10 13:40:56`），不直接展示原始数字；`-1`、`0` 等哨兵值按对应接口文档解释。用户给自然语言时间（如「下周三」「2024 年 3 月」）时先按 `Asia/Shanghai` 解析成具体时刻再转毫秒，只给日期按当天 `00:00:00` 计算
-2. **文案字段**：圈子 `name`、`description`，活动 `title`、`content` 等文案字段接口已统一返回字符串，直接展示即可，不要按多语言对象解析
+2. **文案字段**：圈子 `name`、`description` 和活动 `title`、`content` 返回字符串，直接展示；名片、报名表组件中的多语言字段按各接口约定读取
 3. **图片数据**：提交业务接口时只传 `imageId`（UUIDv7），禁止提交 URL 或本地路径；展示图片时按 `image/upload-image.md` 组装 CDN 预览地址，不直接展示 ID。Codex Markdown 对远程图片（`https://`）存在跨平台预览问题，需要在回复中展示远程图片时先下载到临时文件，再用本地绝对路径引用；不要直接把 CDN/远程 URL 写入 Markdown 图片语法
 4. **动态表单**：`formInput` 必须严格按返回的 `formJson` 构造，隐藏字段禁止提交，详见 `dynamic-form.md`
 5. **结果展示**：列表用编号展示方便用户选择；枚举值转成中文，不要直接展示数字；空结果时给出引导语
