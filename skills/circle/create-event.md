@@ -27,7 +27,7 @@ Body 以下字段全部必传且不能为 `null`；integer 为 JSON 整数，不
 
 ### 场地
 
-构造前必须读取 `../event/create-event.md` 的「venue 场地结构」，按其中字段语义填写场地名、参与指引、线上链接、地址和坐标，不猜测未知信息。
+构造前必须读取 `../event/create-event.md` 的「venue 场地结构」，按其中字段语义填写场地名、参与指引、线上链接、地址和坐标，不猜测未知信息。地点已确定时使用 `offline` 节点，必须提供非空的 `offline.longitude` 和 `offline.latitude`，缺失时先补齐再提交；主办方明确地点待定时使用 `notice`（如「线下地点待定」），无需经纬度，可以创建。不要仅因缺少坐标就擅自改为地点待定。
 
 本接口不支持空场地：至少包含 `notice`、`online`、`offline` 中一个对象节点；`offline` 与 `online` 可组合，`notice` 不可与其他节点共存。将场地对象序列化为字符串后放入 `venue`，不要直接传嵌套对象；请求示例见下方。
 
@@ -61,7 +61,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/circles/${CID}/events" \
     "coverImageId": "019d0a18-1234-733f-acc2-92b8507b7777",
     "startTime": 1800003600000,
     "endTime": 1800010800000,
-    "venue": "{\"offline\":{\"title\":\"远湾创新中心 3F\",\"country\":\"中国\",\"province\":\"上海市\",\"city\":\"上海市\",\"district\":\"浦东新区\",\"address\":\"示例路 100 号\"}}",
+    "venue": "{\"offline\":{\"title\":\"远湾创新中心 3F\",\"country\":\"中国\",\"province\":\"上海市\",\"city\":\"上海市\",\"district\":\"浦东新区\",\"address\":\"示例路 100 号\",\"longitude\":\"121.500000\",\"latitude\":\"31.230000\"}}",
     "scope": 1,
     "requireApproval": 0
   }'
