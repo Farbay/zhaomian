@@ -19,9 +19,11 @@
 | `resume` | 履历相关图片 | `user/{uid}/resume/{imageId}` |
 | `circleSubmission` | 圈子申请动态表单里的图片 | `user/{uid}/circle/submission/{imageId}` |
 | `eventSubmission` | 活动报名动态表单里的图片 | `user/{uid}/event/submission/{imageId}` |
-| `eventBanner` | 活动封面图 | `event/banner/{imageId}` |
+| `eventBanner` | 活动封面图，长宽比必须 1:1，不满足禁止上传 | `event/banner/{imageId}` |
 
 只需使用上表取值；其他值会返回「图片上传类型不存在」，不要尝试。
+
+`eventBanner` 用于活动封面（`bannerImageIds`、`coverImageId`）：长宽比必须为 1:1，不满足禁止上传。
 
 ### contentType
 

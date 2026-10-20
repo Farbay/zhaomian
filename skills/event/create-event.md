@@ -17,7 +17,7 @@
 | `hosts` | object[] | 主理人列表，只需创建者时传 `[]`；自动加入及人数规则见下方 |
 | `title` | string | 标题，最多 128 字 |
 | `content` | string | 活动详细介绍，最多 10000 字 |
-| `bannerImageIds` | string[] | 至少一个非空 UUID v7 图片 ID；先按 `../image/upload-image.md` 上传 `eventBanner` 图片，不传 URL、本地路径或图片对象 |
+| `bannerImageIds` | string[] | 至少一个非空 UUID v7 图片 ID；先按 `../image/upload-image.md` 上传 `eventBanner` 图片，不传 URL、本地路径或图片对象；每张图长宽比必须为 1:1，不满足禁止上传 |
 | `formId` | string | `""` 不绑定，否则传有效报名表 ID；创建表单见 `create-form.md`，修改绑定见 `bind-form.md` |
 | `prerequisite` | integer | 报名门槛，取值及配套数据见下方 |
 | `prerequisiteData` | string | **JSON 对象字符串**，与 `prerequisite` 配套 |

@@ -16,7 +16,7 @@ Body 以下字段全部必传且不能为 `null`；integer 为 JSON 整数，不
 | --- | --- | --- |
 | `title` | string | 非空白标题，最多 128 字 |
 | `content` | string | 非空白介绍，最多 10000 字，不传国际化对象 |
-| `coverImageId` | string | 单个非空 UUID v7；先按 `../image/upload-image.md` 上传 `eventBanner` 图片，不传数组、URL 或本地路径 |
+| `coverImageId` | string | 单个非空 UUID v7；先按 `../image/upload-image.md` 上传 `eventBanner` 图片，不传数组、URL 或本地路径；图片长宽比必须为 1:1，不满足禁止上传 |
 | `startTime` | integer | 开始毫秒时间戳，`> 0`；同时作为报名截止时间，不能早于服务端当前发布时间 |
 | `endTime` | integer | 结束毫秒时间戳，必须 `> startTime` |
 | `venue` | string | **JSON 对象字符串**，结构见下方 |
