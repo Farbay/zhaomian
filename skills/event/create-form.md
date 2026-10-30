@@ -1,15 +1,27 @@
-# create-form — 创建活动报名表
+# create-form — 创建动态表单
 
 `POST /open/basic/dynamic-forms` · 鉴权：Bearer apiKey
 
-创建活动表单，bizType 传 2。formJson 为完整表单对象；创建后用返回的 formId 创建活动或更新绑定。增删改字段均生成新表单版本；提交前读取 `../dynamic-form.md`，按现有组件、校验和联动规则构造。
+创建前读取 `../dynamic-form.md` 的组件、校验和联动协议。
 
 | 字段 | 必填 | 说明 |
 | --- | --- | --- |
-| bizType | 是 | 活动传 2 |
-| formJson | 是 | 完整表单对象，含 components、links、strategies |
+| bizType | 是 | 业务类型，见下表 |
+| formJson | 是 | JSON 对象，包含 components、strategies、links 三个数组 |
+
+| bizType | 用途 |
+| --- | --- |
+| 1 | 圈子 |
+| 2 | 活动 |
+| 3 | 圈子成员信息 |
+
+- 创建时不传 eid、cid、bizId 或 formId，不自动绑定业务。
+- 活动表单使用 bizType=2，取得 formId 后按 `create-event.md` 创建活动或按 `bind-form.md` 绑定；其他业务无对应 Skill 绑定接口。
+- bizType=3 的规范化内容未变时可复用原 ID；组件和选项顺序变化属于内容变化。
 
 ## 请求体示例
+
+活动报名表，参加理由限 1–500 字符：
 
 ```json
 {
@@ -17,22 +29,23 @@
   "formJson": {
     "components": [
       {
-        "id": "reason",
+        "id": "019cbfce-d0b7-7b74-976d-000000000002",
         "component": "Textarea",
-        "label": {
-          "fallback": "参加理由"
-        },
+        "label": "参加理由",
         "required": true,
         "props": {
-          "maxlength": 500
+          "placeholder": "请输入参加理由"
         },
-        "options": [],
-        "validates": [],
-        "defaultValue": ""
+        "validates": [
+          {
+            "mode": "pattern",
+            "value": "^[\\s\\S]{1,500}$"
+          }
+        ]
       }
     ],
-    "links": [],
-    "strategies": []
+    "strategies": [],
+    "links": []
   }
 }
 ```

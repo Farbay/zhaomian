@@ -1,6 +1,6 @@
 ---
 name: zhaomian-skills
-version: 20261020194055
+version: 20261029133337
 description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名、个人活动创建与管理
 ---
 
@@ -19,7 +19,7 @@ npx skills add farbay/zhaomian -g
 ## 按需加载
 
 1. 先在下方「接口索引」按用户说法或接口名定位接口，**只读该接口对应的 `.md`**，不要一次性读取 `skills/` 下的全部文档；调用前必须读完，禁止凭字段名或经验猜测参数与枚举；
-2. 按需补读：提交表单前读 `dynamic-form.md`；出现 `imageId`、`xxxImageId(s)`、`cdnUrl` 时读 `image/upload-image.md`；发送或提交验证码时读 `account/send-captcha.md`。
+2. 按需补读：处理动态表单时读 `dynamic-form.md`；处理图片时读 `image/upload-image.md`；发送短信 / 邮箱验证码时读 `account/send-captcha.md`。查询接口引用了结果字段文档时一并读取。
 
 ## 接口索引
 
@@ -30,7 +30,7 @@ npx skills add farbay/zhaomian -g
 | 更新用户意图 | 换个意图 | PUT | `/open/account/intent` | `account/update-intent.md` |
 | 确认 Onboarding 完成 | 引导做完了吗 | PUT | `/open/account/onboarding-confirmed` | `account/confirm-onboarding.md` |
 | 获取未读消息总数 | 有未读消息吗 | GET | `/open/user/unread-counts` | `account/get-unread-counts.md` |
-| 发送短信 / 邮箱验证码 | 填表单要手机号或邮箱验证码 | POST | `/open/basic/mobile/captcha`、`/open/basic/email/captcha` | `account/send-captcha.md` |
+| 发送短信 / 邮箱验证码 | 发短信验证码 / 表单要邮箱验证码 | POST | `/open/basic/mobile/captcha`、`/open/basic/email/captcha` | `account/send-captcha.md` |
 | 获取个人名片 | 看看我的名片 | GET | `/open/user/profile` | `profile/get-profile.md` |
 | 创建或修改名片 | 改名字（昵称）、简介、头像 / 创建名片 | POST | `/open/user/profile` | `profile/upsert-profile.md` |
 | 分页获取拍一拍互动名片 | 我拍过谁 / 谁拍过我 | GET | `/open/user/tickles` | `interaction/list-tickles.md` |
@@ -66,8 +66,8 @@ npx skills add farbay/zhaomian -g
 | 查询我创建的活动 | 查询我创建的活动 | GET | `/open/events/created` | `event/list-created-events.md` |
 | 获取活动管理详情 | 获取活动管理详情 | GET | `/open/events/{eid}/management` | `event/get-management.md` |
 | 查询活动报名名单 | 查询活动报名名单 | GET | `/open/events/{eid}/submissions` | `event/list-submissions.md` |
-| 创建活动报名表 | 创建活动报名表 | POST | `/open/basic/dynamic-forms` | `event/create-form.md` |
-| 获取报名表结构 | 获取报名表结构 | GET | `/open/basic/dynamic-forms/{formId}` | `event/get-form.md` |
+| 创建动态表单 | 创建活动报名表 / 圈子表单 | POST | `/open/basic/dynamic-forms` | `event/create-form.md` |
+| 获取动态表单结构 | 获取当前或历史报名表结构 | GET | `/open/basic/dynamic-forms/{formId}` | `event/get-form.md` |
 | 生成活动签到凭证 | 生成活动签到凭证 | POST | `/open/events/{eid}/check-in-scenes/{source}` | `event/generate-check-in.md` |
 | 搜索活动 | 最近有什么活动 | GET | `/open/events/search` | `event/search-events.md` |
 | 查询已参加活动列表 | 我报名了哪些活动 | GET | `/open/events/signed-up` | `event/list-signed-up-events.md` |
@@ -77,7 +77,7 @@ npx skills add farbay/zhaomian -g
 
 ### 规范文档
 
-- `dynamic-form.md` — 动态表单结构、联动规则与 `formInput` 提交格式
+- `dynamic-form.md` — 动态表单组件、校验、联动、审核策略、唯一标识与 `formInput` 提交 / 存储格式
 - `image/upload-image.md` — 图片上传凭证、OSS 直传与 `imageId` 使用规范
 - `account/send-captcha.md` — 短信 / 邮箱验证码的发送与在表单中的提交格式
 - `circle/query-result.md` — 圈子列表字段与状态枚举
@@ -113,21 +113,15 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 ## channel 渠道标识
 
-`channel` 记录「是谁调用的」，值是调用方当前所用工具的名称；它是**自报字段**，后端会调用 `AgentLogoUtil.normalizeChannel` 统一归一化为小写中划线格式（≤64 字符），无枚举、无白名单校验，任何工具都传自己的名字，不需要事先登记。
-
-当前已有 logo 预设（仅供参考，不限于此）：`claude-code`、`cline`、`codebuddy`、`codewhale`、`codex`、`continue`、`cursor`、`deepseek-harness`、`gemini-cli`、`github-copilot`、`hermes-agent`、`kimi`、`manus`、`openclaw`、`opencode`、`openhands`、`pi`、`qoder`、`qwen-code`、`trae`、`warp`、`workbuddy`。也可以传其他 AI coding agent 名称。
-
-- 用工具名本身，不带版本号、不加 `-agent` / `-client` 后缀；服务端会统一归一化格式：如 Codex 传 `codex`（示例仅示范格式，实际传当前工具名）
-- 接口定义了 `channel` 就一律传，不要省略；不要传 `open`、`api` 这类来源描述，只有确实没有工具名时才传 `open`（如手写 curl）
-- 省略或传空串时的落库值以各接口文档为准：名片记为 `open`，圈子申请、活动报名记为空字符串
-
-带 `channel` 的接口：`profile/upsert-profile.md`、`circle/join-circle.md`、`event/signup-event.md`。
+- 名片创建 / 修改、圈子申请和活动报名均传当前工具名称，如 `pi`、`codex`；无枚举或白名单，不带版本号，不额外加后缀。
+- 服务端归一化为小写中划线格式（≤64 字符）。仅无工具名的手写调用使用 `open`，不要用 `api` 等来源描述。
+- 省略或传空串时，名片记为 `open`，圈子申请和活动报名记为空字符串；这是接口默认行为，不是调用建议。
 
 ## 响应格式
 
 - 统一返回 `{"code": 0, "msg": "ok", "data": ...}`；`code` 为 `0` 表示成功，非 0 时 `msg` 是中文提示，直接转述
 - 失败时可能附带 `det`（数组），为动态表单等结构化错误明细
-- 单条记录查不到时 `data` 是 `null` 或 `{}`，列表无数据时是 `[]`，都不是接口错误
+- 成功响应中的 `null`、`{}` 或 `[]` 表示无数据；查无记录也可能返回业务错误码，以具体接口为准
 - HTTP 层错误：`400 Params Not Valid`、`401 Authorized Failed`、`403 Forbidden`
 
 ### 需要区分处理的业务码
@@ -150,8 +144,8 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 ## 分页
 
-- 搜索类接口（`circles/search`、`events/search`）为游标分页：`count`（1-100）必传，默认 `10`；`next` 必传，第一页传空字符串，后续页传上一页的 `data.page.next`，不要自行拼接或猜测游标
-- 搜索类接口返回 `data.list`、`data.total` 和 `data.page`；第一页按「共 N 个，已显示前 10 个」提示，由用户决定是否继续
+- 分页接口的 `count`（1-100）必传，建议取 `10`，不是服务端默认值。`circles/search`、`circles/joined`、`events/search` 的 `next` 可省略，第一页建议传空字符串；已参加活动、互动名片、活动管理列表的 `next` 必传。后续页只传上一页的 `data.page.next`，空字符串表示结束，不拼接或猜测游标
+- 搜索、已加入圈子、已参加活动和互动名片返回 `data.list`、`data.page`，`data.total` 仅第一页返回；我创建的活动和活动报名名单不返回 total。第一页按实际数量提示，由用户决定是否继续
 - 用户资料类列表（`user/tags`、`user/qas`、`user/socials`、`user/resumes`）不分页：一次返回全量 `data` 数组，没有 `page` 和 `total`，`count`、`next` 传了也不生效
 - 默认只取第一页：用户没说「还有吗」「下一页」「全部列出来」时，禁止自动翻页、连翻多页或循环拉取（仅适用于搜索类接口）
 
@@ -159,28 +153,29 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 
 - 创建、修改、删除、报名、申请等写操作，在参数齐全后先向用户复述一遍即将提交的内容，确认后再调用
 - 删除类操作必须先确认目标（用列表编号让用户选择），不要凭 ID 猜测
-- 报名、申请类接口在已有有效记录时会直接返回原记录，不会重复创建，重试是安全的
+- 活动报名在已有待审核或已通过记录时返回原记录；圈子申请在已加入或已有待处理申请时返回业务提示，不直接返回原记录。超时后先查询最近记录，不因不会重复创建就无条件重试，验证组件也可能需要重新获取真实验证码 / 授权码
 - 网络超时或 HTTP 5xx 可按接口文档决定是否重试；创建活动先查询结果，禁止直接重试。HTTP 4xx 和业务码非 0 时不要原样重试，先按 `msg` 修正
 - 取消活动报名的授权与超时处理以 `event/cancel-signup.md` 为准，避免重复确认或误取消新报名
 
 ## 不支持的能力
 
-开放 API 支持自己的账号与资料、圈子搜索和申请，以及活动创建、管理、报名与签到入口。以下诉求没有对应接口，需要引导用户到「照面」小程序完成，不要猜测路径或编造接口：
+以下能力不在本 Skill 接口范围内，引导用户到「照面」小程序完成，不编造接口：
 
 - 撤回圈子申请
 - 删除活动或名片（活动支持编辑、取消和归档）
 - 切换或管理多张名片（开放 API 只能读写默认名片）
 - 查看消息内容（只能查询未读数量）
 - 上传普通文件（动态表单 `File` 组件没有对应的文件上传接口）
+- 获取微信手机号授权码（动态表单 `MobileVerify` 需在小程序授权，短信验证码不可替代）
 - 除短信 / 邮箱验证码之外的账号安全操作（改密码、注销等）
 
 ## 通用规则
 
 1. **时间数据**：`xxxTime` 字段均为毫秒级 Unix 时间戳，展示时按 `Asia/Shanghai` 转 `YYYY-MM-DD HH:mm:ss`（如 `1789018856000` → `2026-09-10 13:40:56`），不直接展示原始数字；`-1`、`0` 等哨兵值按对应接口文档解释。用户给自然语言时间（如「下周三」「2024 年 3 月」）时先按 `Asia/Shanghai` 解析成具体时刻再转毫秒，只给日期按当天 `00:00:00` 计算
-2. **文案字段**：圈子 `name`、`description` 和活动 `title`、`content` 返回字符串，直接展示；名片、报名表组件中的多语言字段按各接口约定读取
+2. **文案字段**：圈子 `name`、`description`、活动 `title`、`content` 及表单 `label` 均为字符串
 3. **图片数据**：提交业务接口时只传 `imageId`（UUIDv7），禁止提交 URL 或本地路径；展示图片时按 `image/upload-image.md` 组装 CDN 预览地址，不直接展示 ID。Codex Markdown 对远程图片（`https://`）存在跨平台预览问题，需要在回复中展示远程图片时先下载到临时文件，再用本地绝对路径引用；不要直接把 CDN/远程 URL 写入 Markdown 图片语法
-4. **动态表单**：`formInput` 必须严格按返回的 `formJson` 构造，隐藏字段禁止提交，详见 `dynamic-form.md`
-5. **结果展示**：列表用编号展示方便用户选择；枚举值转成中文，不要直接展示数字；空结果时给出引导语
+4. **动态表单**：按 `dynamic-form.md` 处理当前结构、填写值和历史版本，不凭经验拼字段
+5. **结果展示**：列表用编号，枚举转中文；空结果如实说明当前无匹配或有效记录，不推断从未添加、加入或报名，不套固定回复
 6. **上下文衔接**：记住已查询的 cid / eid / pid / tagId / qaId / resumeId，后续操作无需用户重复提供；不要向用户复述这些已缓存的标识，也不要说明它们已经可用
 7. **隐私**：只展示接口实际返回的内容，不推断、不补充他人未公开的信息
 8. **下一步引导**：拿到结果后主动问一句要不要继续相关动作（看活动、加入圈子、补全资料等），一次最多给一到两个选项；只做引导，不自动搜索、不自动报名或申请；同一方向引导过就不再重复；接口文档另有规定时以接口文档为准

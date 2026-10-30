@@ -17,11 +17,11 @@
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
 | `pid` | string | 是 | 报名名片 ID，必须属于当前用户 |
-| `channel` | string | 否 | 报名渠道，传当前工具名称；后端统一归一化为小写中划线格式，未传时记录为空字符串。预设见 `../SKILL.md`，也可传其他 AI coding agent 名称 |
+| `channel` | string | 否 | 传当前工具名称，规则见 `../SKILL.md`；省略或空串记为 `""` |
 | `formId` | string | 是 | 活动当前绑定的报名表单 ID；未绑定表单时传空字符串 |
-| `formInput` | array | 是 | 动态表单数据；按 `../dynamic-form.md` 构造，未绑定表单时传 `[]` |
+| `formInput` | array | 有表单时是 | 按 `../dynamic-form.md` 构造；无表单时可省略、传 null 或 `[]`，建议传 `[]` |
 
-**不需要传 `cid`**：open 入口统一按「不关联圈子申请」处理。
+常规报名不传 `cid`，不关联圈子申请；审批、名额及关联圈子申请状态共同决定是否通过，未绑定表单或配置 AUTO 策略均不代表活动免审核。
 
 ## 响应
 
@@ -31,22 +31,12 @@
 | `data.status` | `2` 已通过、`1` 待审核 |
 | `data.review` | 审批关联信息 |
 
-| 业务码 | 说明 |
-|--------|------|
-| `150` | 活动不存在 |
-| `151` | 活动报名申请不存在 |
-| `170` | 动态表单不存在 |
-
 ## 注意
 
-1. **必须上报 `channel`**：传当前工具名称（规则见 `../SKILL.md` 的「channel 渠道标识」），服务端会归一化，不要传 `open`。
-2. **`pid` 必填**：先用 `../profile/get-profile.md` 获取；没有名片时先按 `../profile/upsert-profile.md` 创建，不能凭空生成 pid。
-3. `formId` 必须与活动**当前**绑定表单一致；`formInput` 必须严格按该 `formJson` 构造，先读 `../dynamic-form.md`。
-4. 是否直接通过取决于是否报满、活动是否需要审核；已有待审核或已通过记录时接口会直接返回原记录，不会重复创建。
-5. `data.status=2` 表示报名成功，`data.status=1` 表示等待审核，回复时必须区分这两种结果。
-6. 报「报名名片不属于当前用户」时，重新获取 `pid` 再试；报「报名表单与活动配置不一致」时，提示重新搜索活动后再提交。
-7. 用户想确认状态时读 `get-latest-submission.md`。
-8. 用户要取消报名时读 `cancel-signup.md`；待审核与已通过均使用统一接口，以服务端校验结果为准。
+- pid 从 `../profile/get-profile.md` 获取；没有名片时先按 `../profile/upsert-profile.md` 创建。
+- 已有待审核或已通过记录时返回原记录，不重复创建。
+- 名片归属错误时重新获取 pid；表单与配置不一致时重新查询活动当前绑定后再填写。
+- 查询状态见 `get-latest-submission.md`；取消待审核或已通过报名见 `cancel-signup.md`。
 
 ## 示例
 
@@ -70,7 +60,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/events/${EID}/submissions" \
     "channel": "codex",
     "formId": "019cbfe9-4bbb-733f-acc2-92b8507b3920",
     "formInput": [
-      { "id": "reason", "component": "Textarea", "label": "报名理由", "value": "我想参加这次活动" }
+      { "id": "019cbfce-d0b7-7b74-976d-000000000002", "component": "Textarea", "label": "报名理由", "value": "我想参加这次活动" }
     ]
   }'
 ```

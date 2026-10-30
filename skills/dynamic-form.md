@@ -1,240 +1,210 @@
 # dynamic-form — 动态表单
 
-圈子申请与活动报名使用动态表单：接口先返回 `formJson`（表单结构），用户填写后按结构构造 `formInput`（表单数据）再提交。表单结构由后台配置，组件类型、必填、联动和校验规则都可能不同，因此**禁止凭经验拼表单**，必须基于当次返回的 `formJson` 构造。
+圈子申请与活动报名先读取当次 `formJson`，再构造 `formInput`。禁止凭经验拼字段，也不能用当前表单解释历史申请或报名。
 
 ## 适用接口
 
-| 接口 | 表单来源字段 | 提交字段 |
-|------|--------------|----------|
-| `POST /open/circles/{cid}/submissions` | 圈子搜索结果 / 已加入圈子列表的 `formId`、`formJson` | `formId`、`formInput` |
-| `POST /open/events/{eid}/submissions` | 活动搜索结果 / 已参加活动列表的 `formId`、`formJson` | `formId`、`formInput` |
+| 接口 | 表单来源 / 用途 |
+| --- | --- |
+| `POST /open/circles/{cid}/submissions` | 圈子搜索 / 已加入列表返回的 `formId`、`formJson` |
+| `POST /open/events/{eid}/submissions` | 活动搜索 / 已参加列表返回的 `formId`、`formJson` |
+| `POST /open/basic/dynamic-forms` | 创建表单，见 `event/create-form.md` |
+| `GET /open/basic/dynamic-forms/{formId}` | 读取指定版本，见 `event/get-form.md` |
+| `PUT /open/events/{eid}/form` | 绑定新报名表或解除绑定，见 `event/bind-form.md` |
 
 ## 核心约束
 
-1. **只提交 `formJson.components` 里存在的组件**：`formInput[].id` 必须与组件 `id` 完全一致，重复 id 或未知 id 会被拒绝。
-2. **`component` 必须与定义完全一致**：`formInput[].component` 是组件类型快照，必须等于 `formJson.components[].component`。
-3. **`label` 必填且不能为空**：取该组件的 `label.fallback` 文案；不要自造文案。
-4. **`value` 字段必须存在**：即使字段为空，也要按类型提交空值（如 `""`、`[]`、`{}`），不能省略 `value` 键。
-5. **隐藏字段禁止提交**：按 `links` 判定为不可见的字段，提交会直接报「当前字段按联动规则应隐藏，不能提交」。
-6. **可见必填字段必须提交且非空**：不可见字段即使 `required=true` 也不校验（因为本就不该提交）。
-7. **`formId` 必须与圈子 / 活动当前配置一致**：圈子未绑定表单时 `formId` 传空字符串，后端会忽略 `formInput` 并固定保存 `[]`。
-8. **图片先上传**：`Image` 组件只提交 `imageId`，必须先按 `image/upload-image.md` 完成上传。
-9. **验证码要用户提供**：`MobileVerify`、`EmailVerify` 需要先按 `account/send-captcha.md` 发送验证码，再由用户提供；禁止伪造或用示例值。
-10. **提交前后核对 `formId`**：列表结果里的 `formId` 与 `formJson` 是当次快照；如果用户停留过久，建议先重新查询圈子 / 活动再提交。
+1. `formId` 必须与圈子 / 活动当前绑定一致；未绑定时传 `""`，`formInput` 建议传 `[]`，也可省略或传 `null`，服务端忽略填写值并保存 `[]`。圈子无表单自动通过，活动无表单不代表免审核。
+2. `formInput` 为 JSON 数组，每项为 `{id, component, label, value}`；`id` 取真实组件 UUID v7，同次不重复；`component` 与定义一致，`label` 取组件的非空字符串。
+3. 每个已提交项必须有 `value` 键；可见必填字段必须提交且非空。可见选填字段未填写时可省略，不要为了命中策略伪造填写项。
+4. 隐藏字段清空且不提交，也不校验必填；切换条件后按组件顺序重新计算后续联动。
+5. 组件创建时生成 UUID v7，修改属性或排序时保持 ID。表单保存后不可原地修改，变更需创建新版本并重新绑定；历史记录按自身 `formId` 读取结构。
 
-## formJson 结构
+## formJson 与公共字段
+
+顶层必须包含 `components`、`strategies`、`links` 三个数组，允许空数组；组件按展示顺序排列。
+
+| 组件字段 | 类型 / 说明 |
+| --- | --- |
+| `id` | 必填，UUID v7，同一表单不可重复 |
+| `component` | 必填，组件类型，见下表 |
+| `label` | 必填，非空字符串；选项与级联层级的 `label` 也使用字符串 |
+| `source` | 可选，来源字符串；普通表单编辑器使用 `form` |
+| `editable` | 可选，布尔值，是否允许编辑 |
+| `required` | 可选，布尔值，默认 `false` |
+| `description` | 可选，说明字符串 |
+| `props` | 可选，当前组件支持的配置对象，不混用其他组件或旧版属性 |
+| `options` | 按组件提供，元素为 `{label, value}`；级联选项可有 `children` |
+| `validates` | 可选，附加校验数组，无规则时 `[]` |
+| `defaultValue` | 可选，与组件类型匹配；`null` 表示无默认值，保留合法 `false`、`0`、空串；省略必填项不会自动补默认值 |
+| `outputKey` | 可选字符串，保留字段，当前不参与业务输出或唯一标识提取 |
+| `unique` | 可选布尔值，默认 `false`；圈子唯一标识标记，见下文 |
+| `uniqueNormalize` | 可选字符串，仅 `unique=true` 时生效，见下文 |
+| `$xxx` | 外部元数据，如 `$name`、`$externalKey`、`$meta`；组件及其配置中的扩展均以 `$` 开头 |
+
+`$xxx` 不参与协议处理，不依赖其持久化、回传或输出映射，也不能用于绕过业务规则。其他未知组件字段会被拒绝。
+
+## 组件类型与 value 格式
+
+仅使用下表组件及其配置；遇到未知结构先核对版本，不自动替换类型。
+
+| component | value | 配置与约束 |
+| --- | --- | --- |
+| `Input` | 字符串 | 单行文本 / 网址；`props.placeholder`；格式限制放 `validates` |
+| `Textarea` | 字符串 | 长文本；`props.placeholder`；长度限制用 `pattern` |
+| `Select` | 单个选项值或选项值数组 | `props.mode=single` / `tabs` 为单选，`multiple` 为多选；可配 `placeholder` |
+| `EmailVerify` | `{"email":"demo@example.com","code":"1234"}` | `props` 支持 `placeholder`、`verify`、`codeLength`、`cooldownSeconds`、`domain`；`verify=false` 时可省略 `code` |
+| `MobileVerify` | `{"code":"微信手机号授权码"}` | 微信手机号授权，不是短信验证码；`props` 支持 `placeholder`、`verify`、`codeLength`、`cooldownSeconds` |
+| `Image` | `[{"imageId":"实际图片UUID"}]` | 先按 `image/upload-image.md` 上传；无组件专属 props |
+| `Checkbox` | 布尔值 | 必填时必须为 `true`；条款用 `props.mode=terms`，正文 `text`、链接 `url`，无选项数组 |
+| `DatePicker` | 日期 / 时间字符串 | `props.format` 支持 `YYYY`、`YYYY-MM`、`YYYY-MM-DD`、`HH:mm`、`HH:mm:ss`；可配 `placeholder` |
+| `File` | `[{"fileId":"实际文件ID"}]` | 无开放文件上传接口；必填且无有效文件时引导用户到小程序完成 |
+| `DateRangePicker` | `["开始日期或时间","结束日期或时间"]` | 固定两个字符串，格式按 `props.format`，可配 `placeholder` |
+| `CascadePicker` | 从根开始的选项值路径数组 | `props.mode=default`、`placeholder`、`levels`；选项树用 `options.children` |
+| `Rating` | 数字 | `props.min`、`max`、`step` 定义范围和步长；省略时分别为 1、5、1 |
+| `SocialInput` | `{"platform":"GitHub","content":"https://github.com/example"}` | `props.mode=single`、`placeholder`；平台必须取本组件 `options[].value`，不套用用户社媒接口的平台编码 |
+| `CompanyInput` | `{"company":"示例公司","position":"产品经理"}` | `props.position` 控制职位输入，可配 `placeholder`；按配置收集职位 |
+| `WechatInput` | 微信号字符串 | 可配 `props.placeholder`，格式校验使用 `validates` |
+
+选项按原始 JSON 类型提交，数字 `1` 与字符串 `"1"` 不相同，不将布尔值转成字符串；数字必须有限。
+
+### 验证组件
+
+- `EmailVerify`：开启验证（`verify` 未设置或为 `true`）时，先按 `account/send-captcha.md` 发送邮箱验证码，由用户查收后提供。`domain` 非空时限制邮箱域名；`validates` 校验完整邮箱，不校验验证码，也不替代真实性验证。`verify=false` 时提交 `{"email":"demo@example.com"}`，仍需满足邮箱格式、域名和附加校验。
+- `codeLength` 必须与 `account/send-captcha.md` 的实际验证码位数一致；不一致时停止并反馈配置冲突，不补位、不截断。
+- `MobileVerify` 只接受小程序真实授权 `{code}`，不能使用 `{mobile,code}` 或短信验证码；无法取得授权码时引导用户在小程序完成。
+- 服务端验证解析后，记录中的邮箱 / 手机号 `value` 保存为字符串，不回传验证码；不能把历史记录里的字符串原样当作新申请的验证输入。
+
+### CascadePicker
+
+`props.levels` 至少两级，每级 `label` 为非空字符串；`outputKey`、`outputLabelKey` 都是保留字段，不参与业务输出。选项树不得超过配置层数。
+
+`value` 如 `["computer","software"]`，必须逐层匹配父子关系，选到末级或叶子才结束。切换父级清空后代；可见选填未填写时可省略或提交 `[]`，必填不能为空。级联只能作为联动目标，不能作为条件来源。
+
+## validates
+
+`validates` 与 `props`、`required` 同级；必填由 `required` 单独判定。`null`、空白字符串和空数组跳过附加规则，不能因此绕过必填。
+
+| mode | 配置 / 语义 |
+| --- | --- |
+| `email` | 邮箱格式，无附加参数 |
+| `mobile` | 手机号格式，无附加参数 |
+| `weixin` | 微信号格式，无附加参数 |
+| `url` | 网址格式，无附加参数 |
+| `number` | 数字格式，可校验数字字符串，不改变 `Input` 的字符串提交类型 |
+| `pattern` | `value` 为非空 Java 正则字符串，不含两端斜杠；使用查找匹配，完整匹配需显式 `^` / `$`；保留正则首尾空白 |
+| `range` | `min` / `max` 包含边界，可省略一侧；按十进制数值比较，数字文本也按数值解析，**不是文本长度** |
+| `enum` | `values` 为非空允许值数组，按类型严格匹配 |
+
+长度限制用正则；Select 不必重复配置与选项相同的枚举。JSON 中正则反斜杠需转义，例如 1–100 字符：
+
+```json
+{"validates":[{"mode":"pattern","value":"^[\\s\\S]{1,100}$"}]}
+```
+
+## links
+
+每个 `target` 只配置一条联动；`target` 与 `showWhen.id` 都必须是真实组件 ID，目标位于来源之后。`showWhen` 除 `id` 外仅配置一个操作符。
+
+| 操作符 | 条件值 / 含义 |
+| --- | --- |
+| `eq` | 等于指定单值 |
+| `ne` | 不等于指定单值 |
+| `in` | 属于非空数组中的任一值 |
+| `gt` | 大于有限数字 |
+| `lt` | 小于有限数字 |
+
+条件值与来源填写值类型一致；数值比较仅用于数值语义，不将字符串直接当数字。条件满足显示，否则清空并隐藏，不提交隐藏项；来源未提交时不显示依赖字段。
+
+## strategies
+
+每项为 `{strategyId, bind}`；`bind` 是非空、不重复且存在的组件 ID 数组，不使用 `outputKey` 或填写值匹配。
+
+| strategyId | 含义 |
+| --- | --- |
+| `AUTO` | 自动通过策略 |
+| `MANUAL` | 人工审核策略，不覆盖已命中的 AUTO |
+
+本次有效 `formInput` 的 ID 集合包含某条 `bind` 的全部 ID 时命中：单条内 AND，多条同名策略 OR，隐藏字段不参与。两个互斥分支任一可自动通过时应配置两条 AUTO，不把两个互斥字段放进同一 `bind`。
+
+圈子无表单或命中 AUTO 自动通过，未命中则待审核；活动是否通过仍按 `event/signup-event.md` 的审批规则。
+
+## unique 与圈子唯一标识
+
+`unique`、`uniqueNormalize` 位于组件顶级，不放进 `props` 或 `validates`，也不依赖 `outputKey`。
+
+| uniqueNormalize | 处理 |
+| --- | --- |
+| 省略 / 空字符串 | 去首尾空白，保留大小写 |
+| `lowercase` | 去首尾空白后转小写 |
+| `emailPrefixLowercase` | 去首尾空白，取邮箱前缀并转小写，再去前缀首尾空白 |
+
+只从有效且实际提交的 `unique=true` 字段提取；同次最多一个非空字符串，归一化后最多 255 字符。归一化仅用于唯一标识，不改原填写值；空值不占用。
+
+同一圈子正常与禁用成员共同占用，退出释放，不按组件 ID 分不同命名空间；待审核申请不预占。提交申请时检查，通过或重新入圈时再次检查，待审核不保证最终占用成功。冲突提示「该唯一标识已被圈内成员使用」。历史成员不自动回填；活动表单只保存配置，不提供报名唯一性保证。
+
+## 完整示例
+
+以下表单按身份显示公司字段；示例 ID 仅用于说明，调用已有表单必须使用真实返回的 ID。
 
 ```json
 {
   "components": [
     {
-      "id": "apply_reason",
-      "component": "Textarea",
-      "label": { "fallback": "申请理由", "zh": "申请理由", "en": "Reason" },
-      "description": "简单介绍你的背景和加入原因",
+      "id": "019cbfce-d0b7-7b74-976d-000000000001",
+      "component": "Select",
       "required": true,
-      "props": { "rows": 4, "maxlength": 500 },
-      "options": [],
-      "validates": [{ "mode": "minLen", "value": 10 }],
-      "defaultValue": ""
+      "label": "身份",
+      "props": {"mode":"tabs","placeholder":"请选择身份"},
+      "options": [{"label":"在校","value":"student"},{"label":"在职","value":"working"}]
+    },
+    {
+      "id": "019cbfce-d0b7-7b74-976d-000000000002",
+      "component": "Textarea",
+      "required": true,
+      "label": "申请理由",
+      "props": {"placeholder":"请输入申请理由"},
+      "validates": [{"mode":"pattern","value":"^[\\s\\S]{10,500}$"}],
+      "defaultValue": null
+    },
+    {
+      "id": "019cbfce-d0b7-7b74-976d-000000000003",
+      "component": "CompanyInput",
+      "required": true,
+      "label": "公司信息",
+      "props": {"placeholder":"请输入公司","position":true},
+      "validates": [],
+      "defaultValue": null
     }
   ],
+  "strategies": [],
   "links": [
     {
-      "target": "company",
-      "showWhen": { "id": "identity", "eq": "working" }
+      "target": "019cbfce-d0b7-7b74-976d-000000000003",
+      "showWhen": {"id":"019cbfce-d0b7-7b74-976d-000000000001","eq":"working"}
     }
-  ],
-  "strategies": [
-    { "strategyId": "AUTO", "bind": ["apply_reason"] }
   ]
 }
 ```
 
-| 字段 | 说明 |
-|------|------|
-| `components` | 组件数组，决定字段顺序与结构 |
-| `components[].id` | 组件唯一 ID，提交时用它关联 |
-| `components[].component` | 组件类型，见下文类型表 |
-| `components[].label` | 文案对象，提交 `label` 时取 `fallback` |
-| `components[].description` | 字段说明，可空 |
-| `components[].required` | 是否必填；仅对当前可见的字段生效 |
-| `components[].props` | 组件配置，如 `maxlength`、`mode`、`maxCount`、`format`、`maxSizeMB` |
-| `components[].options` | 选项数组，元素为 `{ "label": {...}, "value": ... }` |
-| `components[].validates` | 校验规则数组，见下文规则表 |
-| `components[].defaultValue` | 默认值，用户未填写时可作为兜底 |
-| `links` | 联动规则数组，决定字段是否可见 |
-| `strategies` | 审批策略数组，圈子申请使用；`AUTO` 表示可自动通过 |
-
-## formInput 结构
-
-```json
-[
-  {
-    "id": "apply_reason",
-    "component": "Textarea",
-    "label": "申请理由",
-    "value": "我想加入一起交流技术"
-  }
-]
-```
-
-| 字段 | 必填 | 说明 |
-|------|------|------|
-| `id` | 是 | 对应 `formJson.components[].id` |
-| `component` | 是 | 对应组件的 `component`，必须完全一致 |
-| `label` | 是 | 对应组件的 `label.fallback`，不能为空 |
-| `value` | 是 | 用户填写值，类型见组件表；字段必须存在 |
-
-## 组件类型与 value 格式
-
-| component | 值类型 | 说明 |
-|-----------|--------|------|
-| `Input` | string | `props.type` 为 `number` / `integer` 等数字类型时，提交数字 |
-| `Textarea` | string | 受 `props.maxlength` 限制 |
-| `InputNumber` | number | 必须是数字 |
-| `NumberSelect` | integer | 必须是 `props.start` 到 `props.end` 之间、按 `props.step` 可取的整数 |
-| `Select` | 单值或数组 | `props.mode=single` 提交单个 option 值；`props.mode=multiple` 提交数组 |
-| `SearchSelect` | string / number / boolean | `options` 非空时值必须在 options 内；`options` 为空时提交单个标量 |
-| `Radio` | 单值 | 必须是 options 中的 `value` |
-| `Checkbox` | 数组 | 数组元素必须是 options 中的 `value` |
-| `Tabs` | 单值 | 必须是 options 中的 `value` |
-| `Switch` | boolean | 无 options 时提交布尔值；有 options 时提交 options 中的 `value` |
-| `Rating` | integer | `0` 或空值表示未评分；已评分必须是 1 到 `props.max`（或 `props.count`，默认 5）的整数。必填字段必须给出有效评分，不能留 `0` |
-| `DatePicker` | string | 按 `props.format`（如 `YYYY-MM-DD`）提交，不要自行转换 |
-| `DateRangePicker` | 数组 | 固定两个字符串 `[开始日期, 结束日期]`，格式同 `props.format` |
-| `TimePicker` | string | 按 `props.format`（默认 `HH:mm`）提交 |
-| `CascadePicker` | 数组 | 级联选项值路径，从根开始按层提交，如 `["college_computer", "department_software"]`；逐层校验父子关系。`props.levels` 配置 2～4 级，`options` 为递归选项树；非必填未填写时提交 `[]`，必填时不能为空 |
-| `Image` | 数组 | 元素为 `{ "imageId": "..." }`，先读 `image/upload-image.md` 上传 |
-| `File` | 数组 | 元素为 `{ "fileId": "..." }`；开放 API 暂无文件上传能力，无法获取 fileId 时告知用户到 App 端完成 |
-| `MobileVerify` | 对象 | `{ "mobile": "手机号", "code": "验证码" }`；微信小程序手机号组件场景为 `{ "code": "..." }`。发送验证码见 `account/send-captcha.md` |
-| `EmailVerify` | 对象 | `{ "email": "邮箱", "code": "验证码" }`；`props.domain` 非空时邮箱域名必须在白名单内。发送验证码见 `account/send-captcha.md` |
-
-### CascadePicker（级联选择）
-
-`CascadePicker` 使用 `options` 递归选项树，`props.levels` 按层描述级联结构，支持 2～4 级。`props.mode` 可选且当前仅支持 `default`；未知值会被拒绝，不要自行回退。每个 level 必须有非空的 `label.fallback`，可配置该级选项值与文案的 `outputKey` / `outputLabelKey`（不要配置顶层同名字段）。
-
-提交的 `value` 是从根开始的选项值路径，必须逐层匹配父子关系，例如：
+在职分支的圈子申请 body：
 
 ```json
 {
-  "id": "department",
-  "component": "CascadePicker",
-  "label": "所属院系",
-  "value": ["college_computer", "department_software"]
+  "channel": "pi",
+  "formId": "019cbfe9-4bbb-733f-acc2-92b8507b3920",
+  "formInput": [
+    {"id":"019cbfce-d0b7-7b74-976d-000000000001","component":"Select","label":"身份","value":"working"},
+    {"id":"019cbfce-d0b7-7b74-976d-000000000002","component":"Textarea","label":"申请理由","value":"我想加入圈子一起交流技术与产品经验"},
+    {"id":"019cbfce-d0b7-7b74-976d-000000000003","component":"CompanyInput","label":"公司信息","value":{"company":"示例公司","position":"产品经理"}}
+  ]
 }
 ```
 
-选到叶子节点即可提前结束路径；非必填未填写时提交 `[]`，必填时不能为空。父级切换后应重置后代；按 `links` 判定隐藏时禁止提交。
+选择 `student` 时不提交公司项，即使它 `required=true`。`channel` 换成当前工具名称，见 `SKILL.md`。活动报名还需传 `pid`，取自 `profile/get-profile.md`，详见 `event/signup-event.md`。
 
-## validates 规则
+## 提交与错误处理
 
-| mode | 适用值 | 说明 |
-|------|--------|------|
-| `pattern` | string | 正则匹配 |
-| `minLen` / `maxLen` | string | 字符串长度区间 |
-| `min` / `max` | number | 数值区间 |
-| `minCount` / `maxCount` | 数组 | 选择数量区间 |
-| `enum` | 单值 / 数组 | 值必须在给定枚举内 |
-| `email` | string | 邮箱格式 |
-| `mobile` | string | 手机号格式 |
-| `weixin` | string | 微信号格式 |
-| `url` | string | 以 `http://` 或 `https://` 开头 |
-
-## 联动（links）
-
-`links[].target` 是受控字段，`links[].showWhen` 是显示条件：
-
-```json
-{ "target": "company", "showWhen": { "id": "identity", "eq": "working" } }
-```
-
-| 操作符 | 说明 |
-|--------|------|
-| `eq` | 来源值等于期望值 |
-| `ne` | 来源值不等于期望值 |
-| `in` | 来源值命中期望数组 |
-| `gt` | 来源值大于期望值（仅数值组件） |
-| `lt` | 来源值小于期望值（仅数值组件） |
-
-判定顺序：从组件数组顺序计算可见性；来源字段不可见时，依赖它的字段也不可见；被判定不可见的字段**不能出现在 formInput 中**。
-
-**示例**：`identity` 为 Radio（options：`student` / `working`），`company` 的 link 为 `{"showWhen":{"id":"identity","eq":"working"}}`。
-
-用户选择 `working`：
-
-```json
-[
-  { "id": "identity", "component": "Radio", "label": "身份", "value": "working" },
-  { "id": "company", "component": "Input", "label": "公司", "value": "远湾科技" }
-]
-```
-
-用户选择 `student`（`company` 隐藏，禁止提交）：
-
-```json
-[
-  { "id": "identity", "component": "Radio", "label": "身份", "value": "student" }
-]
-```
-
-## strategies 与自动通过
-
-- `strategyId` 取值：`AUTO`（自动通过）、`MANUAL`（人工审核）。
-- 当本次 `formInput` 的 id 集合覆盖了某条策略 `bind` 中的全部 id 时，该策略命中。
-- 圈子申请命中 `AUTO` 策略（或圈子未绑定表单）时会自动通过并加入圈子；否则进入人工审核。
-
-## 工作流
-
-1. **取表单**：调 `GET /open/circles/search`、`GET /open/circles/joined`、`GET /open/events/search` 或 `GET /open/events/signed-up`，拿到目标圈子 / 活动的 `formId` 与 `formJson`。
-2. **判断是否需要表单**：`formId` 为空字符串时，提交时 `formId` 传 `""`、`formInput` 传 `[]`，直接进入下一步。
-3. **解析字段**：读取 `formJson.components`，排除 `links` 判定为不可见的字段；对 `required=true` 的可见字段向用户收集值。
-4. **补齐值类型**：按组件类型表构造每个可见字段的 `value`；图片先按 `image/upload-image.md` 上传并只提交 `imageId`；验证码按 `account/send-captcha.md` 发送。
-5. **构造 formInput**：按 `components` 原顺序输出可见字段的 `{id, component, label, value}` 数组。
-6. **提交**：
-   - 圈子：`POST /open/circles/{cid}/submissions`（详见 `circle/join-circle.md`），body `{ "channel": "codex", "formId": "...", "formInput": [...] }`
-   - 活动：`POST /open/events/{eid}/submissions`（详见 `event/signup-event.md`），body `{ "pid": "报名名片ID", "channel": "codex", "formId": "...", "formInput": [...] }`；`pid` 取自 `profile/get-profile.md` 的 `data.pid`
-   - 两处的 `channel` 都传**当前工具标识**（见 `../SKILL.md` 的「channel 渠道标识」）；服务端会归一化为小写中划线格式，上面写法只是格式示例
-7. **处理回包**：校验失败时读取 `msg` 与 `det[]` 定位字段，修正后重试；不要跳过校验直接重试相同数据。
-
-## 完整示例
-
-圈子绑定了表单，包含必填的申请理由、选填的公司（联动）、一张图片：
-
-```bash
-curl -X POST "${FARBAY_OPEN_HOST}/open/circles/${CID}/submissions" \
-  -H "Authorization: Bearer ${FARBAY_OPEN_API_KEY}" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "channel": "codex",
-    "formId": "019cbfe9-4bbb-733f-acc2-92b8507b3920",
-    "formInput": [
-      { "id": "identity", "component": "Radio", "label": "身份", "value": "working" },
-      { "id": "apply_reason", "component": "Textarea", "label": "申请理由", "value": "我想加入一起交流技术" },
-      { "id": "company", "component": "Input", "label": "公司", "value": "远湾科技" },
-      { "id": "proof", "component": "Image", "label": "证明材料", "value": [{ "imageId": "019d24d6-c2e8-7669-b2c0-4759bb23acb8" }] }
-    ]
-  }'
-```
-
-无表单提交：
-
-```json
-{ "channel": "codex", "formId": "", "formInput": [] }
-```
-
-## 常见错误
-
-| 错误提示 | 原因 | 处理 |
-|----------|------|------|
-| `formInput.id 不能为空` | 提交项缺少 `id` | 补齐组件 `id` |
-| `提交的 id 不存在于 formJson.components` | 自造字段或提交了旧版本字段 | 以当次返回的 `formJson` 为准 |
-| `同一个 id 不能重复提交` | 同一组件出现多次 | 去重 |
-| `formInput.component 与 formJson 定义不一致` | 类型快照写错 | 直接复制 `formJson.components[].component` |
-| `formInput.label 不能为空` | 未传 `label` 或传了空串 | 传 `label.fallback` |
-| `formInput.value 字段缺失` | 省略了 `value` 键 | 空值也要提交 `"value": ""` / `[]` / `{}` |
-| `必填字段未提交` / `必填字段未填写` | 漏传可见必填字段，或 Rating 未评分 | 补齐该字段 |
-| `当前字段按联动规则应隐藏，不能提交` | 提交了隐藏字段 | 按 links 重新计算可见字段 |
-| `formInput JSON 格式不正确` | `formInput` 不是数组 | 使用 JSON 数组 |
-| `表单数据不能为空` | `formInput` 为空字符串 / 空值 | 无表单时也要传 `[]` |
-| `申请表单与圈子配置不一致` / `报名表单与活动配置不一致` | `formId` 与当前配置不同 | 重新查询圈子 / 活动后再提交 |
+1. 只有 formId 时按 `event/get-form.md` 读取结构；停留较久或表单不一致时重新查询业务当前绑定，不仅重读旧 ID。
+2. 按组件顺序构造可见填写项，向用户确认后提交；验证码 / 授权码须真实，必填条款须用户同意，不能伪造或代勾。
+3. 失败时读取 `msg`、`det[]` 定位字段，修正后再提交，不原样循环重试。

@@ -10,7 +10,7 @@ Body 传 `{}`，使用当前 API Key 绑定账号确认完成引导。
 
 1. 已加入圈子（`GET /open/circles/joined` 有记录）；
 2. 已创建名片（`GET /open/user/profile` 返回 `pid`）；
-3. 已收集意图（`intent` 非空，且为二级意图）。
+3. 已收集有效意图：非空且不是「找人」「看机会」「逛一逛」三个占位值；填写规则见 `update-intent.md`。
 
 ## 工作流
 
@@ -20,8 +20,3 @@ Body 传 `{}`，使用当前 API Key 绑定账号确认完成引导。
    - 创建名片：`../profile/get-profile.md`，没有则按 `../profile/upsert-profile.md` 创建；
    - 收集意图：`get-intent-codes.md` + `update-intent.md`。
 3. 三项完成后调用本接口，再重新查询账号确认 `onboardingConfirmed=1`。
-
-## 注意
-
-- 逐项说明「已加入圈子 / 已创建名片 / 已收集意图」的完成状态，未完成时给出下一步操作建议。
-- 确认成功回复「Onboarding 已完成」。

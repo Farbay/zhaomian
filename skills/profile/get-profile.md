@@ -31,5 +31,5 @@
 - 履历、标签、问答、社媒不在本接口响应里，分别见 `../resume/list-resumes.md`、`../tag/list-tags.md`、`../qa/list-qas.md`、`../social/list-socials.md`。
 - 接口不返回头像 `cdnUrl`，按 `../image/upload-image.md` 用 `uid + avatarImageId` 组装预览地址。
 - `qrCodeImageId` 非空时，按 `../image/upload-image.md` 组装名片二维码预览地址并向用户展示。
-- `data` 为 `{}` 时说明还没有名片，回复「你还没有创建名片。你可以自己写，也可以把简历、个人主页链接等资料发给我，我整理好之后先给你确认，再创建。」，并按 `upsert-profile.md` 创建；创建时头像必填，整理资料时一并提醒用户提供头像图片。
+- `data` 为 `{}` 时说明当前没有有效默认名片；可从用户提供的简历或主页整理资料，补齐头像，确认后按 `upsert-profile.md` 创建。
 - 开放 API 只能读写默认名片，没有多名片管理能力。

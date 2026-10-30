@@ -1,8 +1,8 @@
-# get-form — 获取报名表结构
+# get-form — 获取动态表单结构
 
 `GET /open/basic/dynamic-forms/{formId}` · 鉴权：Bearer apiKey
 
-读取当前或历史报名表结构，用于查看字段和解释报名者原始输入。修改字段需创建新表单后重新绑定，不原地覆盖历史表单。
+路径 formId 为 UUID v7；bizType 见 `create-form.md`。当前填写使用业务绑定的 formId，历史记录使用自身 formId；组件与填写值规则见 `../dynamic-form.md`。
 
 ## 响应示例
 
@@ -17,14 +17,12 @@
     "formJson": {
       "components": [
         {
-          "id": "reason",
+          "id": "019cbfce-d0b7-7b74-976d-000000000002",
           "component": "Textarea",
-          "label": {
-            "fallback": "参加理由"
-          },
+          "label": "参加理由",
           "required": true,
           "props": {
-            "maxlength": 500
+            "placeholder": "请输入参加理由"
           },
           "options": [],
           "validates": [],

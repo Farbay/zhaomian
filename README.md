@@ -2,21 +2,11 @@
 
 为 AI Agent 提供「照面」开放能力的 Skill 集合，支持账号引导、名片资料、标签/问答/社媒/履历、圈子与活动搜索、报名和取消报名等能力。
 
-> 项目名：`zhaomian`（照面拼音，`zm` 为其缩写）。
-> 每个接口一个独立文档，Agent 按需加载；完整接口索引见 [`skills/SKILL.md`](skills/SKILL.md)。
+> 每个接口独立文档，Agent 按需加载；接口索引和当前版本见 [`skills/SKILL.md`](skills/SKILL.md)。
 
 ## 安装
 
 ```bash
-npx skills add farbay/zhaomian -g
-```
-
-### 一键安装提示词
-
-把下面这段提示词发给任意支持 Skills 的 Agent（Claude Code、Codex、Cursor 等）即可完成安装：
-
-```text
-请帮我安装照面 skill：
 npx skills add farbay/zhaomian -g
 ```
 
@@ -67,10 +57,6 @@ export FARBAY_OPEN_API_KEY=fb-sk-xxxxxxxx
 | 圈子 | 搜索公开圈子、已加入圈子、申请加入、创建活动 | [`skills/circle/`](skills/circle/) |
 | 活动 | 搜索、报名、个人活动创建与管理、报名表、报名名单、签到入口 | [`skills/event/`](skills/event/) |
 | 动态表单 | 表单结构、联动规则与提交格式 | [`skills/dynamic-form.md`](skills/dynamic-form.md) |
-
-## 版本
-
-当前版本：**0.1.0**
 
 ## 许可证
 

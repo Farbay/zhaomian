@@ -16,9 +16,9 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `channel` | string | 否 | 申请渠道，传当前工具名称；后端统一归一化为小写中划线格式，未传时记录为空字符串。预设见 `../SKILL.md`，也可传其他 AI coding agent 名称 |
+| `channel` | string | 否 | 传当前工具名称，规则见 `../SKILL.md`；省略或空串记为 `""` |
 | `formId` | string | 是 | 圈子当前绑定的表单 ID；未绑定表单时传空字符串 |
-| `formInput` | array | 是 | 动态表单数据；按 `../dynamic-form.md` 构造，未绑定表单时传 `[]` |
+| `formInput` | array | 有表单时是 | 按 `../dynamic-form.md` 构造；无表单时可省略、传 null 或 `[]`，建议传 `[]` |
 
 ## 响应
 
@@ -27,20 +27,12 @@
 | `data.id` | 申请记录 ID |
 | `data.status` | `1` 已自动通过、`0` 待人工审核 |
 
-| 业务码 | 说明 |
-|--------|------|
-| `131` | 圈子不存在 |
-| `170` | 动态表单不存在 |
-
 ## 注意
 
-1. **必须上报 `channel`**：传当前工具名称（规则见 `../SKILL.md` 的「channel 渠道标识」），服务端会归一化，不要传 `open`。
-2. **`formId` 必须与圈子当前绑定表单一致**，`formInput` 必须严格按该 `formId` 对应的 `formJson` 构造；先读 `../dynamic-form.md`，禁止凭经验拼表单。
-2. 圈子未绑定表单（`formId=""`）时，后端会忽略 `formInput` 并固定保存为 `[]`，提交后自动通过并加入圈子。
-3. 圈子绑定表单且配置了 `AUTO` 策略时，校验通过后自动通过；其他情况进入人工审核。
-4. 已加入圈子或存在待处理申请时不能重复提交。
-5. 展示结果时明确区分「已自动通过，已加入圈子」和「已提交，等待人工审核」；报「申请表单与圈子配置不一致」时，提示重新搜索圈子后再提交。
-6. 用户想确认状态时读 `get-latest-submission.md`。
+- 无表单或命中 AUTO 自动通过，其他情况待审核；策略命中和圈内唯一标识规则见 `../dynamic-form.md`。
+- 加入圈子与名片绑定独立，申请无需 pid。
+- 已加入或已有待处理申请时返回业务提示，不直接返回原记录；查询状态用 `get-latest-submission.md`，不要重复提交。
+- 表单与配置不一致时，重新查询圈子当前绑定后再填写。
 
 ## 示例
 
@@ -63,7 +55,7 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/circles/${CID}/submissions" \
     "channel": "codex",
     "formId": "019cbfe9-4bbb-733f-acc2-92b8507b3920",
     "formInput": [
-      { "id": "reason", "component": "Textarea", "label": "申请理由", "value": "我想加入一起交流" }
+      { "id": "019cbfce-d0b7-7b74-976d-000000000002", "component": "Textarea", "label": "申请理由", "value": "我想加入一起交流" }
     ]
   }'
 ```

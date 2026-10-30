@@ -8,13 +8,13 @@
 
 | 参数 | 类型 | 必填 | 说明 |
 |------|------|------|------|
-| `channel` | string | 否 | 创建/修改渠道，传当前工具名称；后端统一归一化为小写中划线格式，不传或传空串时记为 `open`。预设见 `../SKILL.md`，也可传其他 AI coding agent 名称 |
+| `channel` | string | 否 | 传当前工具名称，规则见 `../SKILL.md`；省略或空串记为 `open` |
 | `nickname` | string | 是 | 名字，最长 16 字 |
 | `gender` | number | 是 | `0` 未知、`1` 男、`2` 女 |
 | `birthday` | string | 是 | `YYYY-MM-DD` 或空字符串 |
 | `bio` | string | 是 | 个人简介，15-255 字，会做语义检测 |
 | `identity` | string | 是 | 身份信息，最长 64 字 |
-| `avatarImageId` | string | 创建时必填 | 头像 `imageId`（UUIDv7）；更新时省略表示沿用现有头像 |
+| `avatarImageId` | string | 创建时必填 | 头像 `imageId`（UUIDv7）；更新时省略或传空字符串表示沿用现有头像 |
 
 ## 响应
 
@@ -24,12 +24,10 @@
 
 ## 注意
 
-- **必须上报 `channel`**：传当前工具名称，取值和归一化规则见 `../SKILL.md` 的「channel 渠道标识」；不要传 `open`。
-- **更新是完整提交**：`nickname`、`gender`、`birthday`、`bio`、`identity` 都要提交，不换头像时才省略 `avatarImageId`。
+- **更新是完整提交**：`nickname`、`gender`、`birthday`、`bio`、`identity` 都要提交，不换头像时 `avatarImageId` 可省略或传空字符串。
 - **头像必须先上传**：`avatarImageId` 必须是用 `avatar` 类型按 `../image/upload-image.md` 上传成功的 `imageId`，禁止提交 `cdnUrl` 或本地路径；用错类型会报「头像不存在」。
-- 创建时没有头像会报「创建名片时 avatarImageId 不能为空」。
-- `bio` 需 15-255 字且有实际含义，无意义内容（重复字符、乱码等）会被拒绝；被拒时直接转述 `msg` 并给出改写建议。
-- 创建成功后记录 `pid`，供后续报名活动、申请圈子使用，不要向用户复述。
+- 简介被语义检测拒绝时转述 msg，引导用户补充有实际含义的内容。
+- 创建成功后记录 `pid`，供后续报名活动、创建活动使用，不要向用户复述。
 
 ## 示例
 

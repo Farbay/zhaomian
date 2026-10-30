@@ -50,14 +50,12 @@
     "formJson": {
       "components": [
         {
-          "id": "reason",
+          "id": "019cbfce-d0b7-7b74-976d-000000000002",
           "component": "Textarea",
-          "label": {
-            "fallback": "参加理由"
-          },
+          "label": "参加理由",
           "required": true,
           "props": {
-            "maxlength": 500
+            "placeholder": "请输入参加理由"
           },
           "options": [],
           "validates": [],

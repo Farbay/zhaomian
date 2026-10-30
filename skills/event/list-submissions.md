@@ -2,7 +2,7 @@
 
 `GET /open/events/{eid}/submissions` · 鉴权：Bearer apiKey
 
-要求活动报名查看或审核权限；仅返回每位报名者的最新记录，包含待审核、通过、拒绝和取消记录，不受普通访客名单可见性限制。返回完整原始 formInput、审核信息及 userProfileResult；名片失效时 userProfileResult 为 null。按每条记录的 formId 查询当时的报名表，不要用当前活动表单解释历史输入。
+要求活动报名查看或审核权限；仅返回每位报名者的最新记录，包含待审核、通过、拒绝和取消记录，不受普通访客名单可见性限制。返回校验归一化后的完整 formInput、审核信息及 userProfileResult；名片失效时 userProfileResult 为 null。按每条记录的 formId 查询当时的报名表，不要用当前活动表单解释历史输入。
 
 | Query | 必填 | 说明 |
 | --- | --- | --- |
@@ -50,7 +50,7 @@
         "formId": "019d0a18-1234-733f-acc2-92b8507b7004",
         "formInput": [
           {
-            "id": "reason",
+            "id": "019cbfce-d0b7-7b74-976d-000000000002",
             "component": "Textarea",
             "label": "参加理由",
             "value": "希望认识技术伙伴"
