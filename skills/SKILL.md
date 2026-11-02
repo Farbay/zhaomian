@@ -1,6 +1,6 @@
 ---
 name: zhaomian-skills
-version: 20261029133337
+version: 20261102152139
 description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名、个人活动创建与管理
 ---
 
@@ -13,7 +13,7 @@ description: 照面小程序 — 账号引导与验证码、个人名片、图�
 重新执行安装命令即可更新到最新版本：
 
 ```bash
-npx skills add farbay/zhaomian -g
+npx skills add https://cnb.cool/farbay/zhaomian.git -g -y
 ```
 
 ## 按需加载

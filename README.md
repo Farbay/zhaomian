@@ -7,7 +7,7 @@
 ## 安装
 
 ```bash
-npx skills add farbay/zhaomian -g
+npx skills add https://cnb.cool/farbay/zhaomian.git -g -y
 ```
 
 ## 配置
