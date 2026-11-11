@@ -1,12 +1,12 @@
 ---
 name: zhaomian-skills
-version: 20261102152139
-description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名、个人活动创建与管理
+version: 20261111164752
+description: 照面小程序 — 账号引导与验证码、个人名片、图片上传、标签/问答/社媒/履历管理、圈子搜索与加入、活动搜索、报名、取消报名、个人活动创建与管理、知识库分组/目录/文章管理
 ---
 
 # 照面小程序
 
-通过远湾开放平台 Open API 调用照面接口，为 AI Agent 提供账号、资料、圈子与活动能力。
+通过远湾开放平台 Open API 调用照面接口，为 AI Agent 提供账号、资料、圈子、活动与知识库能力。
 
 ## 更新 Skill
 
@@ -74,6 +74,19 @@ npx skills add https://cnb.cool/farbay/zhaomian.git -g -y
 | 查询活动报名最近记录 | 我的报名通过了吗 | GET | `/open/events/{eid}/submissions/latest` | `event/get-latest-submission.md` |
 | 报名参加活动 | 报名这个活动 | POST | `/open/events/{eid}/submissions` | `event/signup-event.md` |
 | 取消活动报名 | 取消报名 / 撤回报名 / 不参加了 | DELETE | `/open/events/{eid}/submissions/me` | `event/cancel-signup.md` |
+| 创建分组、目录和文章结点 | 建分组 / 建目录 / 写文章 | POST | `/open/knowledges/{knowledgeId}/nodes` | `knowledge/create-node.md` |
+| 编辑分组、目录和文章结点 | 改分组 / 改目录 / 编辑文章 | PUT | `/open/knowledges/{knowledgeId}/nodes/{nodeId}` | `knowledge/edit-node.md` |
+| 删除分组、目录和文章结点 | 删分组 / 删目录 / 删文章 | DELETE | `/open/knowledges/{knowledgeId}/nodes/{nodeId}` | `knowledge/delete-node.md` |
+| 移动目录和文章结点 | 移动目录 / 移动文章 / 调整顺序 | PUT | `/open/knowledges/{knowledgeId}/nodes/{nodeId}/move` | `knowledge/move-node.md` |
+| 保存文章草稿 | 保存草稿 | PUT | `/open/knowledges/{knowledgeId}/nodes/{nodeId}/draft` | `knowledge/save-draft.md` |
+| 文章发布操作 | 发布文章 / 下架 / 重新上架 | POST | `/open/knowledges/{knowledgeId}/nodes/{nodeId}/publication` | `knowledge/publication.md` |
+| 删除文章草稿 | 丢弃草稿 | DELETE | `/open/knowledges/{knowledgeId}/nodes/{nodeId}/draft` | `knowledge/delete-draft.md` |
+| 分页获取文章 | 知识库有哪些文章 / 我的草稿 | GET | `/open/knowledges/{knowledgeId}/articles` | `knowledge/list-articles.md` |
+| 分页获取文章版本 | 查看文章历史版本 | GET | `/open/knowledges/{knowledgeId}/nodes/{nodeId}/histories` | `knowledge/list-histories.md` |
+| 获取知识库基本信息 | 知识库属于哪个圈子 / 我有什么权限 | GET | `/open/knowledges/{knowledgeId}` | `knowledge/get-knowledge.md` |
+| 获取知识库结点树 | 查看所有分组、目录和文章 | GET | `/open/knowledges/{knowledgeId}/nodes` | `knowledge/get-nodes.md` |
+| 获取指定版本内容 | 查看某个版本正文 | GET | `/open/knowledges/{knowledgeId}/nodes/{nodeId}/histories/{historyId}` | `knowledge/get-history.md` |
+| 获取分组、目录和文章结点详情 | 查看分组 / 目录 / 文章详情 | GET | `/open/knowledges/{knowledgeId}/nodes/{nodeId}` | `knowledge/get-node.md` |
 
 ### 规范文档
 
@@ -139,13 +152,18 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 | `151` | 当前没有有效报名记录 | 可能未报名或已取消，不要解释为从未报名 |
 | `170` | 动态表单不存在 | 重新查询圈子 / 活动后再提交 |
 | `171` | 社媒平台不存在 | 说明该平台暂未接入 |
+| `173` `174` `178` | 知识库、结点或文章版本不可用 | 重新查询目标，不跨知识库或文章替换 ID |
+| `175` | 结点类型不正确 | 按结点类型选择操作 |
+| `176` | 同层名称已存在 | 修改标题或选择其他父结点 |
+| `177` | 草稿不存在 | 重新读取文章详情 |
+| `179` | 当前草稿已变化 | 重新读取详情并确认草稿后再发布 |
 
 其余非 0 业务码直接转述 `msg`，不要自行解释成其他含义。
 
 ## 分页
 
-- 分页接口的 `count`（1-100）必传，建议取 `10`，不是服务端默认值。`circles/search`、`circles/joined`、`events/search` 的 `next` 可省略，第一页建议传空字符串；已参加活动、互动名片、活动管理列表的 `next` 必传。后续页只传上一页的 `data.page.next`，空字符串表示结束，不拼接或猜测游标
-- 搜索、已加入圈子、已参加活动和互动名片返回 `data.list`、`data.page`，`data.total` 仅第一页返回；我创建的活动和活动报名名单不返回 total。第一页按实际数量提示，由用户决定是否继续
+- 分页接口的 `count` 必传，建议取 `10`，不是服务端默认值；知识库文章与版本列表范围为 1–200，其余为 1–100。`circles/search`、`circles/joined`、`events/search`、知识库文章与版本列表的 `next` 可省略，第一页建议传空字符串；已参加活动、互动名片、活动管理列表的 `next` 必传。后续页只传上一页的 `data.page.next`，空字符串表示结束，不拼接或猜测游标
+- 搜索、已加入圈子、已参加活动、互动名片、知识库文章与版本列表返回 `data.list`、`data.page`，`data.total` 仅第一页返回；我创建的活动和活动报名名单不返回 total。第一页按实际数量提示，由用户决定是否继续
 - 用户资料类列表（`user/tags`、`user/qas`、`user/socials`、`user/resumes`）不分页：一次返回全量 `data` 数组，没有 `page` 和 `total`，`count`、`next` 传了也不生效
 - 默认只取第一页：用户没说「还有吗」「下一页」「全部列出来」时，禁止自动翻页、连翻多页或循环拉取（仅适用于搜索类接口）
 
@@ -176,6 +194,6 @@ curl -X POST "${FARBAY_OPEN_HOST}/open/user/tags" \
 3. **图片数据**：提交业务接口时只传 `imageId`（UUIDv7），禁止提交 URL 或本地路径；展示图片时按 `image/upload-image.md` 组装 CDN 预览地址，不直接展示 ID。Codex Markdown 对远程图片（`https://`）存在跨平台预览问题，需要在回复中展示远程图片时先下载到临时文件，再用本地绝对路径引用；不要直接把 CDN/远程 URL 写入 Markdown 图片语法
 4. **动态表单**：按 `dynamic-form.md` 处理当前结构、填写值和历史版本，不凭经验拼字段
 5. **结果展示**：列表用编号，枚举转中文；空结果如实说明当前无匹配或有效记录，不推断从未添加、加入或报名，不套固定回复
-6. **上下文衔接**：记住已查询的 cid / eid / pid / tagId / qaId / resumeId，后续操作无需用户重复提供；不要向用户复述这些已缓存的标识，也不要说明它们已经可用
+6. **上下文衔接**：记住已查询的 cid / eid / pid / tagId / qaId / resumeId / knowledgeId / nodeId / historyId，后续操作无需用户重复提供；不要向用户复述这些已缓存的标识，也不要说明它们已经可用
 7. **隐私**：只展示接口实际返回的内容，不推断、不补充他人未公开的信息
 8. **下一步引导**：拿到结果后主动问一句要不要继续相关动作（看活动、加入圈子、补全资料等），一次最多给一到两个选项；只做引导，不自动搜索、不自动报名或申请；同一方向引导过就不再重复；接口文档另有规定时以接口文档为准

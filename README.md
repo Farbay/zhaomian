@@ -1,6 +1,6 @@
 # 照面 skill
 
-为 AI Agent 提供「照面」开放能力的 Skill 集合，支持账号引导、名片资料、标签/问答/社媒/履历、圈子与活动搜索、报名和取消报名等能力。
+为 AI Agent 提供「照面」开放能力的 Skill 集合，支持账号引导、名片资料、标签/问答/社媒/履历、圈子与活动搜索、报名和取消报名、知识库分组/目录/文章管理等能力。
 
 > 每个接口独立文档，Agent 按需加载；接口索引和当前版本见 [`skills/SKILL.md`](skills/SKILL.md)。
 
@@ -56,6 +56,7 @@ export FARBAY_OPEN_API_KEY=fb-sk-xxxxxxxx
 | 履历管理 | 职业、教育等履历的增删改查（含类型字段语义） | [`skills/resume/`](skills/resume/) |
 | 圈子 | 搜索公开圈子、已加入圈子、申请加入、创建活动 | [`skills/circle/`](skills/circle/) |
 | 活动 | 搜索、报名、个人活动创建与管理、报名表、报名名单、签到入口 | [`skills/event/`](skills/event/) |
+| 知识库 | 分组、目录与文章结点管理，草稿、发布与版本查询 | [`skills/knowledge/`](skills/knowledge/) |
 | 动态表单 | 表单结构、联动规则与提交格式 | [`skills/dynamic-form.md`](skills/dynamic-form.md) |
 
 ## 许可证
