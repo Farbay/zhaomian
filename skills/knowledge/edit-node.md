@@ -1,5 +1,7 @@
 # edit-node — 编辑分组、目录和文章结点
 
+⚠️ 调用前必须遵守 [SKILL.md](../SKILL.md) 的「知识库修改：先预览，确认后提交」规范：先展示操作预览，用户明确确认后再提交；保存草稿也不例外。
+
 `PUT /open/knowledges/{knowledgeId}/nodes/{nodeId}` · 鉴权：Bearer apiKey · 要求知识库管理权限
 
 `knowledgeId` 为知识库 ID（圈子知识库等于 `cid`），`nodeId` 为该知识库内的结点 ID，均为 UUIDv7。先按 `get-node.md` 读取结点类型和当前内容，再完整提交该类型的字段；不支持修改结点类型。

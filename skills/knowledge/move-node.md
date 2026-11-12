@@ -1,5 +1,7 @@
 # move-node — 移动目录和文章结点
 
+⚠️ 调用前必须遵守 [SKILL.md](../SKILL.md) 的「知识库修改：先预览，确认后提交」规范：先展示操作预览，用户明确确认后再提交；保存草稿也不例外。
+
 `PUT /open/knowledges/{knowledgeId}/nodes/{nodeId}/move` · 鉴权：Bearer apiKey · 要求知识库管理权限
 
 `knowledgeId` 为知识库 ID（圈子知识库等于 `cid`），`nodeId` 为待移动的目录或文章结点 ID，均为 UUIDv7。本接口不移动分组。

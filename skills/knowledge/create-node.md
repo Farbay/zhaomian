@@ -1,5 +1,7 @@
 # create-node — 创建分组、目录和文章结点
 
+⚠️ 调用前必须遵守 [SKILL.md](../SKILL.md) 的「知识库修改：先预览，确认后提交」规范：先展示操作预览，用户明确确认后再提交；保存草稿也不例外。
+
 `POST /open/knowledges/{knowledgeId}/nodes` · 鉴权：Bearer apiKey · 要求知识库管理权限
 
 `knowledgeId` 为知识库 ID，圈子知识库使用圈子 `cid`，格式为 UUIDv7。分组、目录和文章统一称为结点，`nodeType` 分别为 `1`、`2`、`3`。

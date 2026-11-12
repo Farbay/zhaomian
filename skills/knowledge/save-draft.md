@@ -1,5 +1,7 @@
 # save-draft — 保存文章草稿
 
+⚠️ 调用前必须遵守 [SKILL.md](../SKILL.md) 的「知识库修改：先预览，确认后提交」规范：先展示操作预览，用户明确确认后再提交；保存草稿也不例外。
+
 `PUT /open/knowledges/{knowledgeId}/nodes/{nodeId}/draft` · 鉴权：Bearer apiKey · 要求知识库管理权限
 
 `knowledgeId` 为知识库 ID（圈子知识库等于 `cid`），`nodeId` 为文章结点 ID，均为 UUIDv7。分组、目录不能保存文章草稿。
@@ -17,4 +19,4 @@
 {"title":"快速开始","icon":"","bodyMarkdown":"# 快速开始\n\n待完善的正文。","parentNodeId":"019f1000-0000-7000-8000-000000000002"}
 ```
 
-成功返回 `data.nodeId`。保存后按 `get-node.md` 读取当前 `draftHistoryId`，再按 `publication.md` 发布；不把保存草稿当作发布成功。
+成功返回 `data.nodeId`。保存草稿不等于发布；仅当用户已明确确认发布时，才按 `get-node.md` 读取当前 `draftHistoryId` 并按 `publication.md` 发布。

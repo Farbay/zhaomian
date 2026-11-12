@@ -1,5 +1,7 @@
 # delete-draft — 删除文章草稿
 
+⚠️ 调用前必须遵守 [SKILL.md](../SKILL.md) 的「知识库修改：先预览，确认后提交」规范：先展示操作预览，用户明确确认后再提交；保存草稿也不例外。
+
 `DELETE /open/knowledges/{knowledgeId}/nodes/{nodeId}/draft` · 鉴权：Bearer apiKey · 要求知识库管理权限
 
 | 路径参数 | 说明 |
