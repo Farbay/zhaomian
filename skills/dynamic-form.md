@@ -53,8 +53,8 @@
 | `Input` | 字符串 | 单行文本 / 网址；`props.placeholder`；格式限制放 `validates` |
 | `Textarea` | 字符串 | 长文本；`props.placeholder`；长度限制用 `pattern` |
 | `Select` | 单个选项值或选项值数组 | `props.mode=single` / `tabs` 为单选，`multiple` 为多选；可配 `placeholder` |
-| `EmailVerify` | `{"email":"demo@example.com","code":"1234"}` | `props` 支持 `placeholder`、`verify`、`codeLength`、`cooldownSeconds`、`domain`；`verify=false` 时可省略 `code` |
-| `MobileVerify` | `{"code":"微信手机号授权码"}` | 微信手机号授权，不是短信验证码；`props` 支持 `placeholder`、`verify`、`codeLength`、`cooldownSeconds` |
+| `EmailVerify` | `{"email":"demo@example.com","code":"1234"}` | `props` 支持 `placeholder`、`verify`、`cooldownSeconds`、`domain`；`verify=false` 时可省略 `code` |
+| `MobileVerify` | `{"code":"微信手机号授权码"}` | 微信手机号授权，不是短信验证码；`props` 支持 `placeholder`、`verify`、`cooldownSeconds` |
 | `Image` | `[{"imageId":"实际图片UUID"}]` | 先按 `image/upload-image.md` 上传；无组件专属 props |
 | `Checkbox` | 布尔值 | 必填时必须为 `true`；条款用 `props.mode=terms`，正文 `text`、链接 `url`，无选项数组 |
 | `DatePicker` | 日期 / 时间字符串 | `props.format` 支持 `YYYY`、`YYYY-MM`、`YYYY-MM-DD`、`HH:mm`、`HH:mm:ss`；可配 `placeholder` |
@@ -71,7 +71,7 @@
 ### 验证组件
 
 - `EmailVerify`：开启验证（`verify` 未设置或为 `true`）时，先按 `account/send-captcha.md` 发送邮箱验证码，由用户查收后提供。`domain` 非空时限制邮箱域名；`validates` 校验完整邮箱，不校验验证码，也不替代真实性验证。`verify=false` 时提交 `{"email":"demo@example.com"}`，仍需满足邮箱格式、域名和附加校验。
-- `codeLength` 必须与 `account/send-captcha.md` 的实际验证码位数一致；不一致时停止并反馈配置冲突，不补位、不截断。
+- 历史 `props.codeLength` 忽略，不参与校验；验证码按用户实际收到的内容提交，不补位、不截断。
 - `MobileVerify` 只接受小程序真实授权 `{code}`，不能使用 `{mobile,code}` 或短信验证码；无法取得授权码时引导用户在小程序完成。
 - 服务端验证解析后，记录中的邮箱 / 手机号 `value` 保存为字符串，不回传验证码；不能把历史记录里的字符串原样当作新申请的验证输入。
 
